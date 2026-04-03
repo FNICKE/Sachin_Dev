@@ -1,20 +1,21 @@
 import React from 'react';
 import Link from 'next/link';
-import { Github, Twitter, Linkedin, Mail, ArrowUpRight } from 'lucide-react';
+import { Github, Linkedin, Mail, ArrowUpRight } from 'lucide-react';
 
 const footerLinks = {
   'Navigate': [
     { name: 'Home', href: '/' },
+    { name: 'About', href: '/about' },
     { name: 'Projects', href: '/projects' },
     { name: 'Blog', href: '/blog' },
     { name: 'Skills', href: '/skills' },
     { name: 'Contact', href: '/contact' },
   ],
   'Connect': [
-    { name: 'GitHub', href: '#', icon: <Github size={14} /> },
-    { name: 'LinkedIn', href: '#', icon: <Linkedin size={14} /> },
-    { name: 'Twitter', href: '#', icon: <Twitter size={14} /> },
-    { name: 'Email', href: 'mailto:hello@sachin.dev', icon: <Mail size={14} /> },
+    { name: 'GitHub', href: 'https://github.com/FNICKE', icon: <Github size={14} /> },
+    { name: 'LinkedIn', href: 'https://www.linkedin.com/in/sachin-rathod-469168310', icon: <Linkedin size={14} /> },
+    { name: 'Instagram', href: 'https://www.instagram.com/insane_sachin_666/', icon: <div className="text-[10px]">📸</div> },
+    { name: 'Email', href: 'mailto:rthodsachin0766@gmail.com', icon: <Mail size={14} /> },
   ],
 };
 
@@ -29,7 +30,7 @@ const Footer = () => (
             <div className="w-9 h-9 rounded-xl flex items-center justify-center font-black text-white text-lg"
               style={{ background: 'linear-gradient(135deg,#6366f1,#ec4899)' }}>S</div>
             <span className="font-black text-xl text-white/90 group-hover:text-white transition-colors">
-              sachin<span className="text-indigo-400">.</span>dev
+              Sachin Rathod
             </span>
           </Link>
           <p className="text-sm text-white/40 leading-relaxed max-w-xs font-medium">
@@ -38,10 +39,10 @@ const Footer = () => (
           </p>
           <div className="flex gap-3 mt-6">
             {[
-              { icon: <Github size={17} />, href: '#' },
-              { icon: <Linkedin size={17} />, href: '#' },
-              { icon: <Twitter size={17} />, href: '#' },
-              { icon: <Mail size={17} />, href: 'mailto:hello@sachin.dev' },
+              { icon: <Github size={17} />, href: 'https://github.com/FNICKE' },
+              { icon: <Linkedin size={17} />, href: 'https://www.linkedin.com/in/sachin-rathod-469168310' },
+              { icon: <div className="text-[12px]">📸</div>, href: 'https://www.instagram.com/insane_sachin_666/' },
+              { icon: <Mail size={17} />, href: 'mailto:rthodsachin0766@gmail.com' },
             ].map((s, i) => (
               <a key={i} href={s.href}
                 className="p-2.5 rounded-xl glass-panel text-white/40 hover:text-white hover:scale-110 transition-all duration-200">

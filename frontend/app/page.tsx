@@ -45,9 +45,9 @@ export default function Home() {
         <div className="glass-panel rounded-3xl p-12 md:p-20 text-center relative overflow-hidden">
           {/* Glow orbs */}
           <div className="absolute -top-16 -left-16 w-64 h-64 rounded-full pointer-events-none"
-            style={{ background: 'radial-gradient(circle, rgba(99,102,241,0.2) 0%, transparent 70%)', filter: 'blur(30px)' }} />
+            style={{ background: 'radial-gradient(circle, rgba(99,102,241,0.2) 0%, transparent 70%)', filter: 'blur(1.875rem)' }} />
           <div className="absolute -bottom-16 -right-16 w-64 h-64 rounded-full pointer-events-none"
-            style={{ background: 'radial-gradient(circle, rgba(236,72,153,0.15) 0%, transparent 70%)', filter: 'blur(30px)' }} />
+            style={{ background: 'radial-gradient(circle, rgba(236,72,153,0.15) 0%, transparent 70%)', filter: 'blur(1.875rem)' }} />
 
           <div className="relative z-10">
             <div className="section-label justify-center">Let&apos;s build together</div>

@@ -68,7 +68,7 @@ const AdminLoginPage = () => {
                 <label className="text-[10px] font-black uppercase tracking-widest text-white/40 ml-1">Email Domain</label>
                 <input 
                   type="email" value={resetData.email} onChange={(e) => setResetData({...resetData, email: e.target.value})} required
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-6 py-4 text-white focus:outline-none focus:border-primary transition-all font-medium"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary transition-all font-medium"
                   placeholder="admin@sachin.dev"
                 />
               </div>
@@ -76,7 +76,7 @@ const AdminLoginPage = () => {
                 <label className="text-[10px] font-black uppercase tracking-widest text-white/40 ml-1">New Security Password</label>
                 <input 
                   type="password" value={resetData.newPassword} onChange={(e) => setResetData({...resetData, newPassword: e.target.value})} required
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-6 py-4 text-white focus:outline-none focus:border-primary transition-all font-medium"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary transition-all font-medium"
                   placeholder="••••••••"
                 />
               </div>

@@ -36,11 +36,11 @@ export default function ContactPage() {
                    <div className="flex flex-col gap-6">
                       <div className="flex items-center gap-6">
                          <div className="w-14 h-14 bg-white/5 rounded-2xl flex items-center justify-center text-primary border border-white/5"><Mail size={24} /></div>
-                         <div><p className="text-xs font-black uppercase tracking-widest text-white/30">Email</p><p className="text-lg font-bold text-white">hello@sachin.dev</p></div>
+                         <div><p className="text-xs font-black uppercase tracking-widest text-white/30">Email</p><p className="text-lg font-bold text-white">rthodsachin0766@gmail.com</p></div>
                       </div>
                       <div className="flex items-center gap-6">
                          <div className="w-14 h-14 bg-white/5 rounded-2xl flex items-center justify-center text-secondary border border-white/5"><Phone size={24} /></div>
-                         <div><p className="text-xs font-black uppercase tracking-widest text-white/30">Phone</p><p className="text-lg font-bold text-white">+91 98765 43210</p></div>
+                         <div><p className="text-xs font-black uppercase tracking-widest text-white/30">Phone</p><p className="text-lg font-bold text-white">+91 9604669232</p></div>
                       </div>
                    </div>
                 </div>

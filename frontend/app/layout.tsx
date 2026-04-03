@@ -23,11 +23,14 @@ import { AuthProvider } from "@/context/AuthContext";
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
-      <body className={`${inter.variable} ${outfit.variable} min-h-screen flex flex-col`}
+      <body className={`${inter.variable} ${outfit.variable} min-h-screen flex flex-col relative`}
         style={{ background: '#020817', color: '#f8fafc' }}>
+        <div className="bg-grid fixed inset-0 opacity-40 mix-blend-overlay pointer-events-none z-[-2]"></div>
+        <div className="bg-noise fixed inset-0 opacity-20 pointer-events-none z-[-1]"></div>
+        <div className="aurora"></div>
         <AuthProvider>
           <Navbar />
-          <main className="flex-grow">
+          <main className="flex-grow z-10 relative">
             {children}
           </main>
           <Footer />

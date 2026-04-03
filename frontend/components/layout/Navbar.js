@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { Menu, X, Sparkles } from 'lucide-react';
 
 const navLinks = [
@@ -14,6 +15,7 @@ const navLinks = [
 const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
+  const pathname = usePathname();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40);
@@ -21,12 +23,17 @@ const Navbar = () => {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
+  // Hide navbar on admin pages
+  if (pathname?.startsWith('/admin')) {
+    return null;
+  }
+
   return (
     <header
-      className={`fixed top-0 inset-x-0 z-50 transition-all duration-500 ${
+      className={`fixed top-4 left-1/2 -translate-x-1/2 w-[95%] max-w-7xl z-50 transition-all duration-500 rounded-2xl md:rounded-[1.35rem] ${
         scrolled
-          ? 'py-3 glass-panel border-b'
-          : 'py-6 bg-transparent'
+          ? 'py-3 glass-panel border border-white/10 shadow-2xl bg-dark-bg/85 backdrop-blur-xl'
+          : 'py-5 bg-transparent border-transparent px-4'
       }`}
     >
       <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
@@ -38,8 +45,8 @@ const Navbar = () => {
             <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity"
               style={{ background: 'linear-gradient(135deg,#8b5cf6,#f43f5e)' }} />
           </div>
-          <span className="font-black text-xl tracking-tight text-white/90 group-hover:text-white transition-colors hidden sm:block">
-            sachin<span className="text-indigo-400">.</span>dev
+          <span className="font-black text-xl tracking-tight text-white/90 group-hover:text-white transition-colors hidden sm:block uppercase">
+            Sachin Rathod
           </span>
         </Link>
 

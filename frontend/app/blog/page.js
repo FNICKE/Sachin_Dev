@@ -43,7 +43,7 @@ export default function BlogsPage() {
   if (loading) return <div className="min-h-screen pt-40 px-10 text-center text-3xl font-black text-white italic animate-pulse">Synchronizing Insights...</div>;
 
   return (
-    <div className="min-h-screen bg-black/95 pt-40 pb-20 px-10">
+    <div className="section-padding pt-44">
       <div className="max-w-7xl mx-auto flex flex-col gap-20">
          {/* Page Header */}
          <div className="flex flex-col gap-6 max-w-3xl">

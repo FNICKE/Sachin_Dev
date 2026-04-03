@@ -28,7 +28,7 @@ export default function RootLayout({ children }) {
         <div className="fixed inset-0 bg-mesh opacity-30 pointer-events-none -z-10 animate-gradient bg-[length:200%_200%] overflow-hidden" />
         
         <Navbar />
-        <main className="flex-grow pt-32 pb-24">
+        <main className="flex-grow">
           {children}
         </main>
         <Footer />
