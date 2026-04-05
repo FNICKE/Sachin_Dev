@@ -29,9 +29,10 @@ const BlogsManagement = () => {
   const fetchBlogs = async () => {
     try {
       const { data } = await api.get('/blogs');
-      setBlogs(data.data);
+      setBlogs(Array.isArray(data.data) ? data.data : []);
     } catch (err) {
-      console.error(err);
+      console.error('Failed to fetch blogs:', err);
+      setBlogs([]);
     } finally {
       setLoading(false);
     }
@@ -47,8 +48,8 @@ const BlogsManagement = () => {
     }
   };
 
-  const filteredBlogs = blogs.filter(b => 
-    b.title.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredBlogs = (blogs || []).filter(b =>
+    b.title?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   if (loading) return <div className="text-3xl font-black text-white animate-pulse p-20 text-center tracking-tighter italic text-primary">Synchronizing Editorial Database...</div>;
@@ -93,6 +94,13 @@ const BlogsManagement = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
+              {filteredBlogs.length === 0 && (
+                <tr>
+                  <td colSpan={4} className="px-10 py-20 text-center text-white/20 font-bold text-sm">
+                    {searchTerm ? 'No articles match your search.' : 'No articles yet — click "Draft New Insight" to create your first one.'}
+                  </td>
+                </tr>
+              )}
               {filteredBlogs.map((blog) => (
                 <tr key={blog.id} className="hover:bg-white/2 transition-colors group">
                   <td className="px-10 py-8">

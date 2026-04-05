@@ -96,6 +96,7 @@ function GalaxyCanvas({ skills }) {
   const canvasRef = useRef(null);
   const animRef   = useRef(null);
   const timeRef   = useRef(0);
+  const blastRef  = useRef({ active: false, time: 0, x: 0, y: 0 });
 
   // spread skills across orbits
   const orbits = React.useMemo(() => {
@@ -106,10 +107,25 @@ function GalaxyCanvas({ skills }) {
     return rings;
   }, [skills]);
 
+  const handleCanvasClick = (e) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    
+    blastRef.current = {
+      active: true,
+      time: performance.now(),
+      x,
+      y
+    };
+  };
+
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext('2d', { alpha: true });
 
     // Pre-load logos
     const imageCache = {};
@@ -152,6 +168,35 @@ function GalaxyCanvas({ skills }) {
 
       // Stars background
       drawStars(ctx, w, h);
+
+      // Blast Logic Calculation
+      const blast = blastRef.current;
+      let blastPower = 0;
+      let blastElapsed = 0;
+      if (blast.active) {
+        blastElapsed = (ts - blast.time) / 1000;
+        if (blastElapsed < 2.5) {
+          // Strong exponential decay at first, then ease back
+          blastPower = Math.max(0, Math.exp(-blastElapsed * 2.5) * (1 - blastElapsed / 2.5));
+          
+          // Draw Blast Ripple
+          const rippleCount = 3;
+          for (let i = 0; i < rippleCount; i++) {
+            const rProgress = (blastElapsed * 1.5 - i * 0.2);
+            if (rProgress > 0 && rProgress < 1) {
+              const rippleR = rProgress * 300;
+              const rippleOp = (1 - rProgress) * 0.4;
+              ctx.beginPath();
+              ctx.arc(blast.x, blast.y, rippleR, 0, Math.PI * 2);
+              ctx.strokeStyle = `rgba(160, 140, 255, ${rippleOp})`;
+              ctx.lineWidth = 2;
+              ctx.stroke();
+            }
+          }
+        } else {
+          blast.active = false;
+        }
+      }
 
       // Central glow (galaxy core)
       const coreGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, 60);
@@ -200,22 +245,23 @@ function GalaxyCanvas({ skills }) {
           const baseAngle = (skillIdx / orbitSkills.length) * Math.PI * 2;
           const angle = baseAngle + (ts / (speed * 1000)) * Math.PI * 2;
 
-          // Project 3D ellipse position
-          ctx.save();
-          ctx.translate(cx, cy);
-          ctx.rotate(tilt);
-
-          const px = Math.cos(angle) * r;
-          const py = Math.sin(angle) * r * 0.32;
-
-          ctx.restore();
-
-          // Convert back to canvas coords after rotation
+          // Convert to canvas coords after rotation
           const cosT = Math.cos(tilt), sinT = Math.sin(tilt);
           const rx2 = Math.cos(angle) * r;
           const ry2 = Math.sin(angle) * r * 0.32;
-          const sx = cx + rx2 * cosT - ry2 * sinT;
-          const sy = cy + rx2 * sinT + ry2 * cosT;
+          let sx = cx + rx2 * cosT - ry2 * sinT;
+          let sy = cy + rx2 * sinT + ry2 * cosT;
+
+          // Apply Blast Displacement
+          if (blastPower > 0) {
+            const dx = sx - blast.x;
+            const dy = sy - blast.y;
+            const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+            // Push force: outward from click point
+            const force = blastPower * 500 * (1 / (1 + dist * 0.0015)); 
+            sx += (dx / dist) * force;
+            sy += (dy / dist) * force;
+          }
 
           // Depth cue: behind = smaller / dimmer
           const depthFactor = 0.6 + 0.4 * ((ry2 / (r * 0.32) + 1) / 2);
@@ -292,7 +338,8 @@ function GalaxyCanvas({ skills }) {
   return (
     <canvas
       ref={canvasRef}
-      style={{ width: '100%', height: '100%', display: 'block' }}
+      onClick={handleCanvasClick}
+      style={{ width: '100%', height: '100%', display: 'block', cursor: 'pointer' }}
     />
   );
 }

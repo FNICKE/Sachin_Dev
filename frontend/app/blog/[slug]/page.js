@@ -1,18 +1,15 @@
 "use client";
 import React, { useState, useEffect, useCallback } from 'react';
 import api from '@/lib/api';
-import { Card, Badge, Button } from '@/components/ui';
+import { Card, Button } from '@/components/ui';
 import { 
   Calendar, 
   Clock, 
-  ChevronLeft, 
   ArrowLeft,
   Eye,
-  BookOpen,
-  Tag,
   Share2,
   Bookmark,
-  MessageSquare
+  Hash
 } from 'lucide-react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
@@ -22,6 +19,14 @@ export default function BlogDetailPage() {
   const router = useRouter();
   const [blog, setBlog] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  // Helper to resolve backend image paths
+  const getImageUrl = (url) => {
+    if (!url) return 'https://placehold.co/1200x630/020817/white?text=No+Cover';
+    if (url.startsWith('http')) return url;
+    const baseUrl = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api').replace('/api', '');
+    return `${baseUrl}${url.startsWith('/') ? '' : '/'}${url}`;
+  };
 
   const fetchBlog = useCallback(async () => {
     try {
@@ -51,122 +56,155 @@ export default function BlogDetailPage() {
          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120vw] h-[120vw] bg-[radial-gradient(circle,rgba(var(--primary-rgb),0.05)_0%,transparent_70%)] blur-3xl animate-pulse" />
       </div>
 
-      <div className="relative z-10">
-         {/* Detail Hero Section */}
-         <div className="w-full relative h-[70vh] flex items-end">
-            <div className="absolute inset-0 z-0">
-               <img src={blog.cover_url} className="w-full h-full object-cover grayscale-[0.3] brightness-50" alt={blog.title} />
-               <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
-               <div className="absolute inset-0 bg-black/20 backdrop-blur-[2px]" />
+      <div className="relative z-10 pt-32 lg:pt-44">
+         <div className="max-w-5xl mx-auto px-6 lg:px-10 flex flex-col gap-12">
+            {/* 1. Header Navigation */}
+            <Link href="/blog" className="inline-flex items-center gap-3 text-white/40 hover:text-primary transition-all group font-bold uppercase text-[10px] tracking-widest">
+               <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" /> Repository Return
+            </Link>
+
+            {/* 2. Top Metadata & Title */}
+            <div className="flex flex-col gap-6">
+               <div className="flex flex-wrap items-center gap-4">
+                  <span className="bg-primary/20 border border-primary/30 px-3 py-1.5 text-primary text-[10px] font-black uppercase tracking-[0.2em] rounded-lg">
+                     {blog.tags?.[0] || 'Uncategorized'}
+                  </span>
+                  <div className="w-1.5 h-1.5 rounded-full bg-white/20" />
+                  <div className="flex items-center gap-2 text-white/40 font-bold text-[11px] uppercase tracking-widest">
+                     <Clock size={12} className="text-primary" /> {blog.read_time} Min Deep Dive
+                  </div>
+               </div>
+
+               <h1 className="text-5xl md:text-7xl font-black tracking-tight text-white leading-[1.1] italic">
+                  {blog.title}
+               </h1>
             </div>
 
-            <div className="max-w-7xl mx-auto w-full px-10 pb-20 relative z-20 flex flex-col gap-12">
-               <Link href="/blog" className="flex items-center gap-4 text-white/40 hover:text-primary transition-all group font-black uppercase text-[10px] tracking-widest">
-                  <ArrowLeft size={16} className="group-hover:-translate-x-2 transition-transform" /> Repository Return
-               </Link>
+            {/* 3. Large Featured Image */}
+            <div className="relative group w-full">
+               <div className="absolute -inset-4 bg-primary/10 rounded-[2.5rem] blur-3xl opacity-50 group-hover:opacity-80 transition-all duration-700" />
+               <div className="relative bg-white/5 border border-white/10 p-3 rounded-[2.5rem] overflow-hidden shadow-2xl">
+                  <img 
+                    src={getImageUrl(blog.cover_url)} 
+                    className="w-full h-auto max-h-[80vh] object-contain rounded-[2rem] hover:scale-[1.01] transition-transform duration-700" 
+                    alt={blog.title} 
+                  />
+               </div>
+            </div>
 
-               <div className="flex flex-col gap-8 max-w-4xl">
-                  <div className="flex items-center gap-6">
-                     <span className="bg-primary px-4 py-2 text-white text-[10px] font-black uppercase tracking-[0.2em] transform -skew-x-12">{blog.tags?.[0] || 'Uncategorized'}</span>
-                     <div className="flex items-center gap-2 text-white/40 font-black text-[10px] uppercase tracking-widest italic border-l border-white/10 pl-6"><Clock size={14} className="text-primary" /> {blog.read_time} Min Deep Dive</div>
+            {/* 4. Excerpt & Content Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 mt-8">
+               <div className="lg:col-span-8 flex flex-col gap-12">
+                  {/* Excerpt Box */}
+                  <div className="p-1 border-l-4 border-primary bg-white/5 rounded-r-2xl">
+                    <p className="text-2xl text-white/80 font-medium leading-relaxed pl-8 py-8 italic backdrop-blur-sm">
+                       {blog.excerpt}
+                    </p>
                   </div>
 
-                  <h1 className="text-6xl md:text-8xl font-black tracking-tighter text-white leading-[0.9] italic">
-                     {blog.title}
-                  </h1>
+                  {/* Main Article narrative */}
+                  <article className="prose-styles">
+                     <div 
+                       className="relative z-10 leading-loose font-normal text-lg text-white/90"
+                       dangerouslySetInnerHTML={{ __html: blog.content }}
+                     />
+                  </article>
 
-                  <p className="text-2xl text-white/60 font-medium leading-relaxed italic max-w-3xl border-l-4 border-primary pl-8 py-4 bg-white/5 backdrop-blur-sm rounded-r-2xl">
-                     {blog.excerpt}
-                  </p>
+                  {/* Footer Section (Tags & Share) */}
+                  <footer className="flex flex-col gap-10 pt-16 border-t border-white/5">
+                     <div className="flex flex-col gap-6">
+                        <span className="text-[10px] font-black text-primary uppercase tracking-[0.3em]">Knowledge Tags</span>
+                        <div className="flex flex-wrap gap-3">
+                           {(blog.tags || []).map((tag, idx) => (
+                              <div key={idx} className="flex items-center gap-2 bg-white/5 border border-white/10 px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest text-white/60 hover:text-primary hover:border-primary/20 transition-all cursor-pointer">
+                                 <Hash size={12} className="text-primary" /> {tag}
+                              </div>
+                           ))}
+                        </div>
+                     </div>
+                  </footer>
                </div>
+
+               {/* 5. Sticky Engagement Sidebar */}
+               <aside className="lg:col-span-4 flex flex-col gap-8 h-fit lg:sticky lg:top-40">
+                  <Card className="p-8 border-white/5 bg-white/5 flex flex-col gap-6">
+                     <div className="flex flex-col gap-1">
+                        <span className="text-[10px] font-black text-primary uppercase tracking-[0.3em]">Insights Meta</span>
+                        <h3 className="text-xl font-black text-white italic tracking-tighter">Stats Registry</h3>
+                     </div>
+
+                     <div className="flex flex-col gap-4">
+                        <div className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/5">
+                           <span className="text-[9px] font-black uppercase text-white/20">Access Volume</span>
+                           <span className="text-sm font-black text-white flex items-center gap-2"><Eye size={16} className="text-primary" /> {blog.views} Reads</span>
+                        </div>
+                        <div className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/5">
+                           <span className="text-[9px] font-black uppercase text-white/20">Release</span>
+                           <span className="text-sm font-black text-white flex items-center gap-2"><Calendar size={16} className="text-primary" /> {new Date(blog.published_at || blog.created_at).toLocaleDateString()}</span>
+                        </div>
+                     </div>
+
+                     <div className="flex items-center justify-between pt-4 border-t border-white/5">
+                        <div className="flex items-center gap-2">
+                           <Button variant="outline" className="p-3 bg-white/5 border-white/5 rounded-xl text-white/60 hover:text-primary transition-all"><Share2 size={18} /></Button>
+                           <Button variant="outline" className="p-3 bg-white/5 border-white/5 rounded-xl text-white/60 hover:text-primary transition-all"><Bookmark size={18} /></Button>
+                        </div>
+                     </div>
+                  </Card>
+               </aside>
             </div>
          </div>
-
-         {/* Content Area */}
-         <main className="max-w-7xl mx-auto px-10 py-20 grid grid-cols-1 lg:grid-cols-12 gap-20">
-            {/* Main Narrative */}
-            <article className="lg:col-span-8 flex flex-col gap-20 prose prose-invert max-w-none prose-lg prose-primary">
-               <div className="p-12 bg-white/5 border border-white/5 rounded-3xl backdrop-blur-md relative overflow-hidden">
-                  <div className="absolute top-0 right-0 p-8 text-primary/10 select-none pointer-events-none"><BookOpen size={200} strokeWidth={1} /></div>
-                  
-                  {/* Content Container */}
-                  <div className="relative z-10 whitespace-pre-wrap leading-relaxed font-medium text-lg text-white/80 first-letter:text-6xl first-letter:font-black first-letter:text-primary first-letter:mr-3 first-letter:float-left first-letter:mt-2 italic">
-                     {blog.content}
-                  </div>
-               </div>
-
-               {/* Footer Section */}
-               <footer className="flex flex-col gap-10 pt-20 border-t border-white/5">
-                  <div className="flex flex-wrap gap-4">
-                     {(blog.tags || []).map((tag, idx) => (
-                        <div key={idx} className="flex items-center gap-3 bg-white/5 border border-white/10 px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest text-white/60 hover:text-primary hover:border-primary/20 transition-all cursor-pointer">
-                           <Hash size={14} className="text-primary" /> {tag}
-                        </div>
-                     ))}
-                  </div>
-
-                  <div className="flex items-center justify-between p-8 bg-primary/5 border border-primary/20 rounded-3xl group">
-                     <p className="text-lg font-black text-white italic tracking-tighter uppercase tracking-[0.2em]">Engage / <span className="text-primary font-black uppercase text-xs ml-4 tracking-[0.4em]">Connect with the author</span></p>
-                     <div className="flex items-center gap-4">
-                        <Button variant="outline" className="p-4 bg-white/5 border-white/5 rounded-2xl text-white/60 hover:text-primary transition-all"><Share2 size={20} /></Button>
-                        <Button variant="outline" className="p-4 bg-white/5 border-white/5 rounded-2xl text-white/60 hover:text-primary transition-all"><Bookmark size={20} /></Button>
-                     </div>
-                  </div>
-               </footer>
-            </article>
-
-            {/* Sidebar Metadata */}
-            <aside className="lg:col-span-4 flex flex-col gap-12 h-fit lg:sticky lg:top-40">
-               <Card className="p-10 border-white/5 bg-white/5 flex flex-col gap-8">
-                  <div className="flex flex-col gap-2">
-                     <span className="text-[10px] font-black text-primary uppercase tracking-[0.3em]">Insights Meta</span>
-                     <h3 className="text-2xl font-black text-white italic tracking-tighter">Engagement Registry</h3>
-                  </div>
-
-                  <div className="flex flex-col gap-6">
-                     <div className="flex items-center justify-between p-5 bg-white/5 rounded-2xl border border-white/5">
-                        <div className="flex flex-col gap-1">
-                           <span className="text-[9px] font-black uppercase tracking-widest text-white/20">Access Volume</span>
-                           <span className="text-lg font-black text-white flex items-center gap-3"><Eye size={20} className="text-primary" /> {blog.views.toLocaleString()} Reads</span>
-                        </div>
-                     </div>
-
-                     <div className="flex items-center justify-between p-5 bg-white/5 rounded-2xl border border-white/5">
-                        <div className="flex flex-col gap-1">
-                           <span className="text-[9px] font-black uppercase tracking-widest text-white/20">Release Signature</span>
-                           <span className="text-lg font-black text-white flex items-center gap-3"><Calendar size={20} className="text-primary" /> {new Date(blog.published_at || blog.created_at).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' })}</span>
-                        </div>
-                     </div>
-
-                     <div className="flex items-center justify-between p-5 bg-white/5 rounded-2xl border border-white/5">
-                        <div className="flex flex-col gap-1">
-                           <span className="text-[9px] font-black uppercase tracking-widest text-white/20">Estimated Consumption</span>
-                           <span className="text-lg font-black text-white flex items-center gap-3"><Clock size={20} className="text-primary" /> {blog.read_time} Min Deep Level</span>
-                        </div>
-                     </div>
-
-                     <div className="flex items-center justify-between p-5 bg-white/5 rounded-2xl border border-white/5">
-                        <div className="flex flex-col gap-1">
-                           <span className="text-[9px] font-black uppercase tracking-widest text-white/20">Feedback Loop</span>
-                           <span className="text-lg font-black text-white flex items-center gap-3"><MessageSquare size={20} className="text-primary" /> 12 Insights Shared</span>
-                        </div>
-                     </div>
-                  </div>
-
-                  <Button variant="primary" className="btn-premium py-5 font-black uppercase tracking-widest text-xs flex items-center justify-center gap-4 group">
-                     Follow Thought Stream <ChevronLeft size={16} className="rotate-180 transform group-hover:translate-x-2 transition-all" />
-                  </Button>
-               </Card>
-
-               <div className="p-8 bg-primary border border-primary text-white rounded-3xl flex flex-col gap-4 relative overflow-hidden group cursor-pointer shadow-2xl shadow-primary/30">
-                  <div className="absolute -top-10 -right-10 opacity-20 group-hover:scale-110 transition-transform"><BookOpen size={150} strokeWidth={1} /></div>
-                  <h4 className="text-xs font-black uppercase tracking-[0.3em] opacity-60 italic">Free Access /</h4>
-                  <p className="text-2xl font-black tracking-tighter italic leading-[1.1]">The Roadmap to Fullstack Architect</p>
-                  <p className="text-[10px] font-black uppercase tracking-widest opacity-80 mt-4 underline decoration-2 underline-offset-4">Explore Roadmap</p>
-               </div>
-            </aside>
-         </main>
       </div>
+      <style jsx global>{`
+        .prose-styles {
+          line-height: 1.8;
+          color: rgba(255, 255, 255, 0.9);
+        }
+        .prose-styles h1, .prose-styles h2, .prose-styles h3 {
+          font-family: 'Outfit', sans-serif;
+          font-weight: 800;
+          color: #fff;
+          margin-top: 2.5rem;
+          margin-bottom: 1.2rem;
+          letter-spacing: -0.02em;
+        }
+        .prose-styles h2 { font-size: 2.2rem; }
+        .prose-styles h3 { font-size: 1.7rem; }
+        .prose-styles p {
+          margin-bottom: 1.8rem;
+          font-size: 1.15rem;
+        }
+        .prose-styles img {
+          border-radius: 1.5rem;
+          margin: 3rem 0;
+          box-shadow: 0 30px 60px rgba(0,0,0,0.5);
+          width: 100%;
+          height: auto;
+          display: block;
+        }
+        .prose-styles strong {
+          color: var(--primary);
+          font-weight: 800;
+        }
+        .prose-styles blockquote {
+          border-left: 4px solid var(--primary);
+          padding-left: 2rem;
+          font-style: italic;
+          margin: 2rem 0;
+          background: rgba(255,255,255,0.03);
+          padding: 2rem;
+          border-radius: 0 1.5rem 1.5rem 0;
+        }
+        .prose-styles ul {
+          list-style: disc;
+          padding-left: 1.5rem;
+          margin-bottom: 2rem;
+          color: rgba(255,255,255,0.7);
+        }
+        .prose-styles li {
+          margin-bottom: 0.8rem;
+        }
+      `}</style>
     </div>
   );
 }
