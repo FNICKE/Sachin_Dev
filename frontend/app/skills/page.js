@@ -2,110 +2,103 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import SkillsSection from '@/components/sections/SkillsSection';
-import { Layers, Cpu, Globe2, Database, Wrench, Sparkles } from 'lucide-react';
+import { Terminal } from 'lucide-react';
 
-const categories = [
-  { icon: <Globe2 size={18} />, label: 'Frontend', color: '#61DAFB' },
-  { icon: <Database size={18} />, label: 'Backend', color: '#68A063' },
-  { icon: <Cpu size={18} />, label: 'Database', color: '#00758F' },
-  { icon: <Wrench size={18} />, label: 'DevTools', color: '#F7DF1E' },
-  { icon: <Layers size={18} />, label: 'Cloud', color: '#FF9900' },
+const SYSTEM_LOGS = [
+  "Initializing technical matrix...",
+  "Loading architectural frameworks...",
+  "Syncing full-stack dependencies...",
+  "Optimizing interface protocols...",
+  "Interface ready. Awaiting interaction."
 ];
 
 export default function SkillsPage() {
   return (
-    <div className="section-padding pt-36 min-h-screen relative overflow-hidden">
-      {/* Background decorations */}
-      <div className="absolute top-40 left-0 w-96 h-96 opacity-20 pointer-events-none"
-        style={{ background: 'radial-gradient(circle, rgba(99,102,241,0.3) 0%, transparent 70%)', filter: 'blur(60px)', borderRadius: '50%' }} />
-      <div className="absolute bottom-20 right-0 w-80 h-80 opacity-20 pointer-events-none"
-        style={{ background: 'radial-gradient(circle, rgba(236,72,153,0.3) 0%, transparent 70%)', filter: 'blur(60px)', borderRadius: '50%' }} />
+    <div className="section-padding pt-32 pb-20 min-h-screen bg-[#020817] relative overflow-hidden">
+      
+      {/* Background decorations - subtle pulses */}
+      <div className="absolute top-0 left-0 w-full h-full bg-grid opacity-5 pointer-events-none" />
+      <div className="absolute top-1/4 -right-20 w-80 h-80 bg-[#7aa2f7]/5 blur-[120px] rounded-full" />
+      <div className="absolute bottom-1/4 -left-20 w-80 h-80 bg-[#bb9af7]/5 blur-[120px] rounded-full" />
 
-      <div className="max-w-7xl mx-auto flex flex-col gap-16">
-        {/* Header */}
+      <div className="max-w-7xl mx-auto flex flex-col gap-12 relative z-10">
+        
+        {/* The Console Header - The central focus as requested */}
+        <div className="flex flex-col items-center">
+            <motion.div 
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="flex flex-col w-full max-w-2xl h-60 bg-[#16161e] border border-white/10 rounded-[2rem] p-6 font-mono text-[11px] relative overflow-hidden group hover:border-[#7aa2f7]/40 transition-all duration-500 shadow-[0_20px_50px_rgba(0,0,0,0.5)]"
+            >
+                <div className="flex items-center justify-between mb-5 border-b border-white/5 pb-3">
+                    <div className="flex items-center gap-2">
+                        <div className="w-2.5 h-2.5 rounded-full bg-[#f7768e]/40" />
+                        <div className="w-2.5 h-2.5 rounded-full bg-[#e0af68]/40" />
+                        <div className="w-2.5 h-2.5 rounded-full bg-[#9ece6a]/40" />
+                    </div>
+                    <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/5">
+                        <span className="text-[9px] font-black uppercase tracking-widest text-[#565f89]">Skill_Matrix_Deployment.log</span>
+                    </div>
+                </div>
+
+                <div className="flex flex-col gap-2.5 overflow-hidden">
+                    {SYSTEM_LOGS.map((log, i) => (
+                        <motion.div 
+                            key={i}
+                            initial={{ opacity: 0, x: -15 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: 0.4 + i * 0.12 }}
+                            className="flex gap-3"
+                        >
+                            <span className="text-[#7aa2f7] font-black opacity-50">[{new Date().getHours()}:{new Date().getMinutes()}:{new Date().getSeconds()}]</span>
+                            <span className="text-[#bb9af7] font-bold opacity-80">{'>'}</span>
+                            <span className="text-[#c0caf5] font-medium tracking-tight">{log}</span>
+                        </motion.div>
+                    ))}
+                    <motion.div 
+                        animate={{ opacity: [0, 1, 0] }}
+                        transition={{ repeat: Infinity, duration: 1 }}
+                        className="w-2 h-4 bg-[#7aa2f7] mt-1 shadow-[0_0_10px_#7aa2f7]"
+                    />
+                </div>
+                
+                {/* Visual Flair */}
+                <Terminal size={100} className="absolute -bottom-10 -right-10 text-white opacity-[0.02] -rotate-12 pointer-events-none" />
+                <div className="absolute top-0 right-0 w-32 h-32 bg-[#7aa2f7]/5 blur-3xl pointer-events-none" />
+            </motion.div>
+        </div>
+
+        {/* ── SKILLS INTERFACE ── */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="flex flex-col gap-5 text-center items-center max-w-3xl mx-auto"
-        >
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.1 }}
-            className="section-label justify-center"
-          >
-            <Sparkles size={14} className="text-yellow-400" /> Galaxy of Skills
-          </motion.div>
-          <h1
-            className="text-5xl md:text-7xl font-black tracking-tighter"
-            style={{
-              background: 'linear-gradient(135deg, #a5b4fc 0%, #c084fc 30%, #ec4899 60%, #06b6d4 100%)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text',
-            }}
-          >
-            My Tech Universe
-          </h1>
-          <p className="text-xl text-white/40 font-medium leading-relaxed">
-            Watch my skills orbit through the cosmos — tools, languages, and frameworks I wield to build the future.
-          </p>
-        </motion.div>
-
-        {/* Category chips */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="flex flex-wrap justify-center gap-3"
-        >
-          {categories.map((cat, i) => (
-            <motion.div
-              key={cat.label}
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.3 + i * 0.07 }}
-              whileHover={{ scale: 1.08, y: -2 }}
-              className="flex items-center gap-2.5 px-5 py-2.5 rounded-2xl glass-panel border border-white/10 text-sm font-bold"
-              style={{ color: cat.color }}
-            >
-              {cat.icon} {cat.label}
-            </motion.div>
-          ))}
-        </motion.div>
-
-        {/* Skills galaxy */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.4 }}
+          transition={{ delay: 1, duration: 0.8 }}
+          className="bg-transparent"
         >
           <SkillsSection />
         </motion.div>
 
-        {/* Bottom CTA */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
-          className="glass-panel rounded-3xl p-10 text-center border border-white/5 relative overflow-hidden"
-        >
-          <div className="absolute -top-12 -right-12 w-48 h-48 rounded-full opacity-20"
-            style={{ background: 'radial-gradient(circle, rgba(99,102,241,0.5), transparent)', filter: 'blur(30px)' }} />
-          <div className="relative z-10">
-            <h2 className="text-3xl md:text-4xl font-black text-white mb-4">
-              Always <span className="gradient-text">Learning</span>
-            </h2>
-            <p className="text-white/40 font-medium max-w-md mx-auto mb-8">
-              Technology never stops evolving — and neither do I. Currently exploring TypeScript, GraphQL, and cloud-native architectures.
-            </p>
-            <a href="/contact" className="btn-premium btn-primary px-8 py-4 inline-flex">
-              <Sparkles size={16} className="text-yellow-300" /> Let&apos;s Build Something
-            </a>
-          </div>
-        </motion.div>
+        {/* Status Bar */}
+        <div className="mt-12 flex items-center justify-center gap-12 opacity-30 border-t border-white/5 pt-12">
+            <div className="flex items-center gap-2">
+                <div className="w-1.5 h-1.5 bg-[#9ece6a] rounded-full animate-pulse" />
+                <span className="text-[10px] font-black uppercase tracking-widest text-[#565f89]">Matrix Online</span>
+            </div>
+            <div className="flex items-center gap-2 border-l border-white/10 pl-12">
+                <span className="text-[10px] font-black uppercase tracking-widest text-[#565f89]">Protocol: Neural_Hub_V4</span>
+            </div>
+        </div>
+
       </div>
+
+      <style jsx>{`
+        .bg-grid {
+          background-image: 
+            linear-gradient(rgba(122, 162, 247, 0.05) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(122, 162, 247, 0.05) 1px, transparent 1px);
+          background-size: 70px 70px;
+        }
+      `}</style>
     </div>
   );
 }

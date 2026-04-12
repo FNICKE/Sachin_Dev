@@ -1,6 +1,18 @@
 "use client";
 import React, { useState, useEffect, useRef } from 'react';
 import api from '@/lib/api';
+import { 
+  Palette, 
+  Settings, 
+  Database as DatabaseIcon, 
+  Rocket, 
+  FileJson, 
+  Wrench, 
+  Sparkles,
+  Zap,
+  Flame,
+  Star
+} from 'lucide-react';
 
 /* ─────────────────────────────────────────
    Skill logo / color map  (SVG icon URLs from Simple Icons CDN)
@@ -76,13 +88,13 @@ function getSkillMeta(name) {
    Category config
    ───────────────────────────────────────── */
 const CATEGORY_CONFIG = {
-  frontend:  { label: 'Frontend',  emoji: '🎨', color: '#818cf8' },
-  backend:   { label: 'Backend',   emoji: '⚙️', color: '#34d399' },
-  database:  { label: 'Database',  emoji: '🗄️', color: '#f59e0b' },
-  devops:    { label: 'DevOps',    emoji: '🚀', color: '#60a5fa' },
-  language:  { label: 'Language',  emoji: '📝', color: '#c084fc' },
-  tool:      { label: 'Tools',     emoji: '🔧', color: '#fb923c' },
-  other:     { label: 'Other',     emoji: '✨', color: '#94a3b8' },
+  frontend:  { label: 'Frontend',  icon: <Palette size={16} />,   color: '#818cf8' },
+  backend:   { label: 'Backend',   icon: <Settings size={16} />,  color: '#34d399' },
+  database:  { label: 'Database',  icon: <DatabaseIcon size={16} />, color: '#f59e0b' },
+  devops:    { label: 'DevOps',    icon: <Rocket size={16} />,    color: '#60a5fa' },
+  language:  { label: 'Language',  icon: <FileJson size={16} />,  color: '#c084fc' },
+  tool:      { label: 'Tools',     icon: <Wrench size={16} />,    color: '#fb923c' },
+  other:     { label: 'Other',     icon: <Sparkles size={16} />,  color: '#94a3b8' },
 };
 
 /* ─────────────────────────────────────────
@@ -378,7 +390,7 @@ function SkillPill({ skill }) {
    Category Card
    ───────────────────────────────────────── */
 function CategoryCard({ category, skills, active, onClick }) {
-  const cfg   = CATEGORY_CONFIG[category] || { label: category, emoji: '✨', color: '#94a3b8' };
+  const cfg   = CATEGORY_CONFIG[category] || { label: category, icon: <Sparkles size={16} />, color: '#94a3b8' };
   const total = skills.length;
 
   return (
@@ -387,7 +399,7 @@ function CategoryCard({ category, skills, active, onClick }) {
       className={`category-card ${active ? 'category-card--active' : ''}`}
       style={{ '--cat-color': cfg.color }}
     >
-      <span className="cat-emoji">{cfg.emoji}</span>
+      <span className="cat-emoji">{cfg.icon}</span>
       <span className="cat-label">{cfg.label}</span>
       <span className="cat-count">{total}</span>
     </button>
@@ -490,7 +502,9 @@ export default function SkillsSection() {
         {/* Category Filter */}
         <div className="glass-panel p-6 lg:p-8 rounded-[2rem] border-t border-white/5">
           <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
-             <div className="p-2 rounded-xl bg-white/5 border border-white/5 animate-pulse shadow-[0_0_15px_rgba(99,102,241,0.2)]">⚡</div>
+             <div className="p-2 rounded-xl bg-white/5 border border-white/5 animate-pulse shadow-[0_0_15px_rgba(99,102,241,0.2)] text-[#7aa2f7]">
+                <Zap size={18} />
+             </div>
              Domain Filter
           </h3>
           <div className="category-filter-row">
@@ -499,7 +513,9 @@ export default function SkillsSection() {
               className={`category-card ${activeCategory === 'all' ? 'category-card--active' : ''}`}
               style={{ '--cat-color': '#6366f1' }}
             >
-              <span className="cat-emoji">✦</span>
+              <span className="cat-emoji">
+                <Star size={16} />
+              </span>
               <span className="cat-label">All</span>
               <span className="cat-count">{skills.length}</span>
             </button>
@@ -519,7 +535,9 @@ export default function SkillsSection() {
         <div className="glass-panel p-6 lg:p-8 rounded-[2rem] flex-grow border-t border-white/5 relative overflow-hidden">
            <div className="absolute -bottom-20 -right-20 w-64 h-64 bg-cyan-500/10 rounded-full blur-[4rem] pointer-events-none" />
            <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-3 relative z-10">
-             <div className="p-2 rounded-xl bg-white/5 border border-white/5 shadow-[0_0_15px_rgba(236,72,153,0.2)]">🔥</div>
+             <div className="p-2 rounded-xl bg-white/5 border border-white/5 shadow-[0_0_15px_rgba(236,72,153,0.2)] text-[#f7768e]">
+                <Flame size={18} />
+             </div>
              Tech Stack
           </h3>
           <div className="skill-pills-grid overflow-y-auto max-h-[350px] pr-2 custom-scrollbar relative z-10 p-1">
