@@ -2,7 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ExternalLink, Github, Briefcase, Search, SlidersHorizontal, ArrowUpRight, Star, Calendar, Code, Layout, Server, Database, Smartphone } from 'lucide-react';
-import api from '@/lib/api';
+import Link from 'next/link';
+import api, { BASE_URL } from '@/lib/api';
 
 const techColors = {
   'React': '#61DAFB', 'Next.js': '#ffffff', 'Node.js': '#68A063',
@@ -15,8 +16,7 @@ const techColors = {
 const getImgUrl = (url) => {
   if (!url) return null;
   if (url.startsWith('http')) return url;
-  const base = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api').replace('/api', '');
-  return `${base}${url.startsWith('/') ? '' : '/'}${url}`;
+  return `${BASE_URL}${url.startsWith('/') ? '' : '/'}${url}`;
 };
 
 function ProjectCard({ project, index }) {
@@ -136,6 +136,21 @@ function ProjectCard({ project, index }) {
               +{techList.length - 5}
             </span>
           )}
+        </div>
+
+        {/* Footer */}
+        <div className="flex items-center justify-between pt-5 border-t border-white/5 mt-5">
+           <span className="text-[10px] font-black uppercase tracking-widest text-white/20">
+              {project.category || 'project'}
+           </span>
+           {project.slug && (
+              <Link 
+                 href={`/projects/${project.slug}`}
+                 className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-[0.2em] text-indigo-400 group/lnk hover:text-indigo-300 transition-colors bg-indigo-500/10 px-3 py-1.5 border border-indigo-500/20 rounded-lg hover:bg-indigo-500/20"
+              >
+                 Details <ArrowUpRight size={12} className="group-hover/lnk:-translate-y-0.5 group-hover/lnk:translate-x-0.5 transition-transform" />
+              </Link>
+           )}
         </div>
       </div>
     </motion.div>

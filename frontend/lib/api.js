@@ -1,4 +1,5 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+export const API_URL = 'https://sachin-dev.onrender.com/api';
+export const BASE_URL = API_URL.replace('/api', '');
 
 const getAuthHeaders = () => {
   const token = typeof window !== 'undefined' ? localStorage.getItem('admin_token') : null;

@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect, useCallback } from 'react';
-import api from '@/lib/api';
+import api, { BASE_URL } from '@/lib/api';
 import { Card, Button } from '@/components/ui';
 import { 
   Calendar, 
@@ -24,8 +24,7 @@ export default function BlogDetailPage() {
   const getImageUrl = (url) => {
     if (!url) return 'https://placehold.co/1200x630/020817/white?text=No+Cover';
     if (url.startsWith('http')) return url;
-    const baseUrl = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api').replace('/api', '');
-    return `${baseUrl}${url.startsWith('/') ? '' : '/'}${url}`;
+    return `${BASE_URL}${url.startsWith('/') ? '' : '/'}${url}`;
   };
 
   const fetchBlog = useCallback(async () => {

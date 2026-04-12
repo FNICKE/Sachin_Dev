@@ -1,15 +1,14 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import api from '@/lib/api';
+import api, { BASE_URL } from '@/lib/api';
 import { Calendar, Clock, ChevronRight, Search, BookOpen, Tag, Rss, Flame, TrendingUp, FileText, Bookmark, Feather, Hash } from 'lucide-react';
 import Link from 'next/link';
 
 const getImageUrl = (url) => {
   if (!url) return null;
   if (url.startsWith('http')) return url;
-  const baseUrl = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api').replace('/api', '');
-  return `${baseUrl}${url.startsWith('/') ? '' : '/'}${url}`;
+  return `${BASE_URL}${url.startsWith('/') ? '' : '/'}${url}`;
 };
 
 // Skeleton card

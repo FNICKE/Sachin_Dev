@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { Button, Card } from '@/components/ui';
+import { API_URL } from '@/lib/api';
 import { Mail, Lock, LogIn, Loader2, ShieldCheck } from 'lucide-react';
 
 const AdminLoginPage = () => {
@@ -22,7 +23,7 @@ const AdminLoginPage = () => {
     setLoading(true);
     setError('');
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/auth/reset-password`, {
+      const response = await fetch(`${API_URL}/auth/reset-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(resetData)

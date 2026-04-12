@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import api from '@/lib/api';
+import api, { BASE_URL } from '@/lib/api';
 import { ExternalLink, Github, ArrowUpRight, Star, Globe, Smartphone, Zap, Rocket, Lightbulb } from 'lucide-react';
 
 const techColors = {
@@ -15,8 +15,7 @@ const techColors = {
 const getImgUrl = (url) => {
   if (!url) return null;
   if (url.startsWith('http')) return url;
-  const base = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api').replace('/api', '');
-  return `${base}${url.startsWith('/') ? '' : '/'}${url}`;
+  return `${BASE_URL}${url.startsWith('/') ? '' : '/'}${url}`;
 };
 
 const categoryIcon = {
