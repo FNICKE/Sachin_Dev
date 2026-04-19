@@ -25,7 +25,11 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className="dark">
-      <body className={`${inter.variable} ${outfit.variable} antialiased bg-dark-bg text-dark-text min-h-screen flex flex-col`}>
+      <body className={`${inter.variable} ${outfit.variable} antialiased min-h-screen flex flex-col`}
+        style={{ background: '#020817', color: '#f8fafc' }}>
+
+        {/* Dynamic color-shifting background */}
+        <div className="dynamic-bg" />
 
         {/* Aurora animated background */}
         <div className="aurora" />

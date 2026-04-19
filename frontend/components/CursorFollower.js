@@ -1,142 +1,152 @@
 "use client";
-import React, { useEffect, useState, useRef, useCallback } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { motion, useSpring, useMotionValue } from 'framer-motion';
 
+/* ── spring configs ── */
+const DOT_SPRING   = { damping: 28, stiffness: 450, mass: 0.35 };
+const CAT_SPRING   = { damping: 20, stiffness: 90,  mass: 1.3  };
+
 export default function CursorFollower() {
-  const [isVisible, setIsVisible] = useState(false);
-  const [isClicking, setIsClicking] = useState(false);
-  const [isHovering, setIsHovering] = useState(false);
-  const [trail, setTrail] = useState([]);
+  const [visible,  setVisible]  = useState(false);
+  const [clicking, setClicking] = useState(false);
+  const [hovering, setHovering] = useState(false);
+  const [trail,    setTrail]    = useState([]);
   const trailRef = useRef([]);
-  const mouseRef = useRef({ x: 0, y: 0 });
   const [catLook, setCatLook] = useState({ rotX: 0, rotY: 0 });
-  const animFrameRef = useRef(null);
 
-  const cursorX = useMotionValue(-200);
-  const cursorY = useMotionValue(-200);
+  const cursorX = useMotionValue(-400);
+  const cursorY = useMotionValue(-400);
 
-  const springConfig = { damping: 30, stiffness: 400, mass: 0.4 };
-  const catSpringConfig = { damping: 22, stiffness: 100, mass: 1.2 };
-
-  const springX = useSpring(cursorX, springConfig);
-  const springY = useSpring(cursorY, springConfig);
-  const catX = useSpring(cursorX, catSpringConfig);
-  const catY = useSpring(cursorY, catSpringConfig);
+  const springX = useSpring(cursorX, DOT_SPRING);
+  const springY = useSpring(cursorY, DOT_SPRING);
+  const catX    = useSpring(cursorX, CAT_SPRING);
+  const catY    = useSpring(cursorY, CAT_SPRING);
 
   useEffect(() => {
-    const moveCursor = (e) => {
+    const onMove = (e) => {
       cursorX.set(e.clientX);
       cursorY.set(e.clientY);
-      mouseRef.current = { x: e.clientX, y: e.clientY };
-      if (!isVisible) setIsVisible(true);
+      if (!visible) setVisible(true);
 
       trailRef.current = [
-        { x: e.clientX, y: e.clientY, id: Date.now() },
-        ...trailRef.current.slice(0, 9),
+        { x: e.clientX, y: e.clientY, id: Date.now() + Math.random() },
+        ...trailRef.current.slice(0, 11),
       ];
       setTrail([...trailRef.current]);
 
-      // Cat look direction: center of viewport
       const cx = window.innerWidth / 2;
       const cy = window.innerHeight / 2;
-      const dx = (e.clientX - cx) / cx;
-      const dy = (e.clientY - cy) / cy;
-      setCatLook({ rotX: -dy * 18, rotY: dx * 22 });
+      setCatLook({
+        rotX: -((e.clientY - cy) / cy) * 20,
+        rotY:  ((e.clientX - cx) / cx) * 25,
+      });
     };
+    const onDown     = () => setClicking(true);
+    const onUp       = () => setClicking(false);
+    const onOver     = (e) => { if (e.target.closest('a,button,[role="button"],input,textarea,select')) setHovering(true); };
+    const onOut      = (e) => { if (e.target.closest('a,button,[role="button"],input,textarea,select')) setHovering(false); };
 
-    const handleMouseDown = () => setIsClicking(true);
-    const handleMouseUp = () => setIsClicking(false);
-    const handleHoverStart = (e) => {
-      if (e.target.closest('a, button, [role="button"], input, textarea')) setIsHovering(true);
-    };
-    const handleHoverEnd = (e) => {
-      if (e.target.closest('a, button, [role="button"], input, textarea')) setIsHovering(false);
-    };
-
-    window.addEventListener('mousemove', moveCursor);
-    window.addEventListener('mousedown', handleMouseDown);
-    window.addEventListener('mouseup', handleMouseUp);
-    document.addEventListener('mouseover', handleHoverStart);
-    document.addEventListener('mouseout', handleHoverEnd);
-
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mousedown', onDown);
+    window.addEventListener('mouseup',   onUp);
+    document.addEventListener('mouseover',  onOver);
+    document.addEventListener('mouseout',   onOut);
     return () => {
-      window.removeEventListener('mousemove', moveCursor);
-      window.removeEventListener('mousedown', handleMouseDown);
-      window.removeEventListener('mouseup', handleMouseUp);
-      document.removeEventListener('mouseover', handleHoverStart);
-      document.removeEventListener('mouseout', handleHoverEnd);
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mousedown', onDown);
+      window.removeEventListener('mouseup',   onUp);
+      document.removeEventListener('mouseover',  onOver);
+      document.removeEventListener('mouseout',   onOut);
     };
-  }, [cursorX, cursorY, isVisible]);
+  }, [cursorX, cursorY, visible]);
+
+  if (typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches) return null;
 
   return (
     <>
       <style>{`* { cursor: none !important; }`}</style>
-      <div className="fixed inset-0 pointer-events-none z-[9999]" style={{ opacity: isVisible ? 1 : 0 }}>
 
-        {/* Paw-print trail */}
-        {trail.map((point, i) => (
-          <motion.div
-            key={point.id}
-            initial={{ opacity: 0.7, scale: 1 }}
-            animate={{ opacity: 0, scale: 0.3 }}
-            transition={{ duration: 0.8, ease: 'easeOut' }}
-            style={{
-              position: 'fixed',
-              left: point.x - 5,
-              top: point.y - 5,
-              width: Math.max(4, 10 - i),
-              height: Math.max(4, 10 - i),
-              borderRadius: '50%',
-              background: `hsla(${260 + i * 12}, 85%, 72%, ${0.8 - i * 0.08})`,
-              boxShadow: `0 0 ${14 - i * 1.2}px hsla(${260 + i * 12}, 85%, 72%, 0.6)`,
-              filter: 'blur(0.5px)',
-            }}
-          />
-        ))}
+      <div
+        className="fixed inset-0 pointer-events-none z-[9999]"
+        style={{ opacity: visible ? 1 : 0, transition: 'opacity 0.3s ease' }}
+      >
+        {/* ── Star trail ── */}
+        {trail.map((pt, i) => {
+          const t = 1 - i / trail.length;
+          return (
+            <motion.div
+              key={pt.id}
+              initial={{ opacity: t * 0.8, scale: 1 }}
+              animate={{ opacity: 0, scale: 0.2 }}
+              transition={{ duration: 0.7, ease: 'easeOut' }}
+              style={{
+                position:     'fixed',
+                left:          pt.x - 5,
+                top:           pt.y - 5,
+                width:         Math.max(3, 11 - i),
+                height:        Math.max(3, 11 - i),
+                borderRadius: '50%',
+                background:   `hsla(${255 + i * 13}, 88%, 72%, ${0.9 - i * 0.07})`,
+                boxShadow:    `0 0 ${14 - i}px hsla(${255 + i * 13}, 88%, 72%, 0.7)`,
+              }}
+            />
+          );
+        })}
 
-        {/* Main dot cursor */}
+        {/* ── Ring cursor ── */}
         <motion.div
-          animate={{ scale: isClicking ? 0.5 : isHovering ? 2.2 : 1 }}
-          transition={{ type: 'spring', damping: 20, stiffness: 500 }}
-          className="fixed pointer-events-none"
           style={{
-            width: 12,
-            height: 12,
+            position:     'fixed',
+            top:          -12,
+            left:         -12,
+            width:        24,
+            height:       24,
             borderRadius: '50%',
-            background: 'radial-gradient(circle at 35% 35%, #c4b5fd, #7c3aed)',
-            boxShadow: '0 0 16px rgba(139,92,246,0.9), 0 0 40px rgba(139,92,246,0.4)',
+            border:       '2px solid rgba(139,92,246,0.6)',
             x: springX,
             y: springY,
-            top: -6,
-            left: -6,
           }}
+          animate={{ scale: clicking ? 0.5 : hovering ? 2.5 : 1 }}
+          transition={{ type: 'spring', damping: 18, stiffness: 400 }}
         />
 
-        {/* 3D Cat */}
+        {/* ── Dot cursor ── */}
+        <motion.div
+          style={{
+            position:     'fixed',
+            top:          -5,
+            left:         -5,
+            width:        10,
+            height:       10,
+            borderRadius: '50%',
+            background:   'radial-gradient(circle at 35% 35%, #ddd6fe, #7c3aed)',
+            boxShadow:    '0 0 1rem rgba(139,92,246,0.9), 0 0 2.5rem rgba(139,92,246,0.4)',
+            x: springX,
+            y: springY,
+          }}
+          animate={{ scale: clicking ? 0.3 : hovering ? 0 : 1 }}
+          transition={{ type: 'spring', damping: 20, stiffness: 500 }}
+        />
+
+        {/* ── 3D Cat ── */}
         <motion.div
           className="fixed pointer-events-none"
-          style={{ x: catX, y: catY, top: -70, left: -36 }}
+          style={{ x: catX, y: catY, top: -76, left: -40 }}
         >
           <motion.div
             animate={{
-              scale: isClicking ? 0.85 : isHovering ? 1.15 : 1,
-              rotate: isClicking ? [-3, 3, -3, 0] : 0,
+              scale:  clicking ? 0.82 : hovering ? 1.18 : 1,
+              rotate: clicking ? [-4, 4, -4, 0] : 0,
             }}
-            transition={{ duration: 0.25, type: 'spring', damping: 15, stiffness: 300 }}
-            style={{
-              perspective: '300px',
-              transformStyle: 'preserve-3d',
-            }}
+            transition={{ duration: 0.28, type: 'spring', damping: 14, stiffness: 300 }}
+            style={{ perspective: '20rem', transformStyle: 'preserve-3d' }}
           >
             <motion.div
-              animate={{
-                rotateX: catLook.rotX,
-                rotateY: catLook.rotY,
-              }}
-              transition={{ type: 'spring', damping: 20, stiffness: 80 }}
+              animate={{ rotateX: catLook.rotX, rotateY: catLook.rotY }}
+              transition={{ type: 'spring', damping: 22, stiffness: 80 }}
               style={{ transformStyle: 'preserve-3d' }}
             >
-              <Cat3D isClicking={isClicking} isHovering={isHovering} />
+              <Cat3D clicking={clicking} hovering={hovering} />
             </motion.div>
           </motion.div>
         </motion.div>
@@ -145,234 +155,199 @@ export default function CursorFollower() {
   );
 }
 
-function Cat3D({ isClicking, isHovering }) {
-  const [blinkPhase, setBlinkPhase] = useState(false);
+/* ─────────────────────────────────────────────
+   Cat SVG Component
+───────────────────────────────────────────── */
+function Cat3D({ clicking, hovering }) {
+  const [blink,     setBlink]     = useState(false);
   const [tailAngle, setTailAngle] = useState(0);
-  const [walkPhase, setWalkPhase] = useState(0);
-  const tailRef = useRef(0);
-  const walkRef = useRef(0);
-  const timeRef = useRef(null);
+  const [walkT,     setWalkT]     = useState(0);
+  const rafRef = useRef(null);
 
   useEffect(() => {
     let t = 0;
     const loop = () => {
-      t += 0.04;
-      tailRef.current = Math.sin(t * 1.2) * 28;
-      walkRef.current = t;
-      setTailAngle(tailRef.current);
-      setWalkPhase(walkRef.current);
-      timeRef.current = requestAnimationFrame(loop);
+      t += 0.035;
+      setTailAngle(Math.sin(t * 1.1) * 30);
+      setWalkT(t);
+      rafRef.current = requestAnimationFrame(loop);
     };
-    timeRef.current = requestAnimationFrame(loop);
+    rafRef.current = requestAnimationFrame(loop);
 
-    // Blink timer
-    const blinkInterval = setInterval(() => {
-      setBlinkPhase(true);
-      setTimeout(() => setBlinkPhase(false), 120);
-    }, 3200);
+    const blinkTimer = setInterval(() => {
+      setBlink(true);
+      setTimeout(() => setBlink(false), 110);
+    }, 3500);
 
     return () => {
-      cancelAnimationFrame(timeRef.current);
-      clearInterval(blinkInterval);
+      cancelAnimationFrame(rafRef.current);
+      clearInterval(blinkTimer);
     };
   }, []);
 
-  const eyeH = isClicking ? 1.5 : blinkPhase ? 1 : isHovering ? 11 : 8;
-  const pupilH = isClicking ? 0.5 : isHovering ? 9 : 6;
+  const eyeRY  = clicking ? 0.8 : blink ? 0.5 : hovering ? 6  : 4.5;
+  const pupRY  = clicking ? 0.3 : hovering ? 5  : 3.2;
 
   return (
     <svg
-      width="72"
-      height="84"
-      viewBox="0 0 72 84"
+      width="80"
+      height="92"
+      viewBox="0 0 80 92"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       style={{
         filter: `
-          drop-shadow(0 0 18px rgba(139,92,246,0.8))
-          drop-shadow(0 0 6px rgba(139,92,246,0.5))
-          drop-shadow(2px 4px 8px rgba(0,0,0,0.6))
+          drop-shadow(0 0 1.2rem rgba(139,92,246,0.9))
+          drop-shadow(0 0 0.5rem rgba(139,92,246,0.5))
+          drop-shadow(0.125rem 0.25rem 0.5rem rgba(0,0,0,0.7))
         `,
         transform: 'translateZ(0)',
+        willChange: 'filter',
       }}
     >
       <defs>
-        <radialGradient id="cg-head" cx="38%" cy="32%">
-          <stop offset="0%" stopColor="#c4b5fd" />
-          <stop offset="55%" stopColor="#8b5cf6" />
+        <radialGradient id="gc-head" cx="38%" cy="32%">
+          <stop offset="0%"   stopColor="#ddd6fe" />
+          <stop offset="55%"  stopColor="#8b5cf6" />
           <stop offset="100%" stopColor="#5b21b6" />
         </radialGradient>
-        <radialGradient id="cg-body" cx="38%" cy="28%">
-          <stop offset="0%" stopColor="#a78bfa" />
-          <stop offset="60%" stopColor="#7c3aed" />
+        <radialGradient id="gc-body" cx="38%" cy="28%">
+          <stop offset="0%"   stopColor="#a78bfa" />
+          <stop offset="60%"  stopColor="#7c3aed" />
           <stop offset="100%" stopColor="#4c1d95" />
         </radialGradient>
-        <radialGradient id="cg-belly" cx="50%" cy="40%">
-          <stop offset="0%" stopColor="rgba(255,255,255,0.22)" />
-          <stop offset="100%" stopColor="rgba(255,255,255,0)" />
+        <radialGradient id="gc-belly" cx="50%" cy="40%">
+          <stop offset="0%"   stopColor="rgba(255,255,255,0.25)" />
+          <stop offset="100%" stopColor="rgba(255,255,255,0)"   />
         </radialGradient>
-        <radialGradient id="cg-nose" cx="50%" cy="30%">
-          <stop offset="0%" stopColor="#f9a8d4" />
+        <radialGradient id="gc-nose" cx="50%" cy="30%">
+          <stop offset="0%"   stopColor="#fda4af" />
           <stop offset="100%" stopColor="#ec4899" />
         </radialGradient>
-        <linearGradient id="cg-tail" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#a78bfa" />
-          <stop offset="100%" stopColor="#7c3aed" />
+        <linearGradient id="gc-tail" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%"   stopColor="#a78bfa" />
+          <stop offset="100%" stopColor="#6d28d9" />
         </linearGradient>
-        <filter id="cg-glow">
-          <feGaussianBlur stdDeviation="2" result="blur" />
+        <radialGradient id="gc-cheek" cx="50%" cy="50%">
+          <stop offset="0%"   stopColor="rgba(253,164,175,0.55)" />
+          <stop offset="100%" stopColor="rgba(253,164,175,0)"    />
+        </radialGradient>
+        <filter id="gc-inner-glow">
+          <feGaussianBlur stdDeviation="1.5" result="blur" />
           <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
         </filter>
-        {/* 3D shadow/depth */}
-        <radialGradient id="cg-cheek-l" cx="50%" cy="50%">
-          <stop offset="0%" stopColor="rgba(249,168,212,0.55)" />
-          <stop offset="100%" stopColor="rgba(249,168,212,0)" />
-        </radialGradient>
-        <radialGradient id="cg-cheek-r" cx="50%" cy="50%">
-          <stop offset="0%" stopColor="rgba(249,168,212,0.55)" />
-          <stop offset="100%" stopColor="rgba(249,168,212,0)" />
-        </radialGradient>
       </defs>
 
-      {/* === TAIL (animated) === */}
-      <g transform={`rotate(${tailAngle}, 36, 70)`} style={{ transformOrigin: '36px 70px' }}>
-        <path
-          d="M36 70 Q52 55 58 42 Q63 32 55 26"
-          stroke="url(#cg-tail)"
-          strokeWidth="5"
-          strokeLinecap="round"
-          fill="none"
-          opacity="0.9"
-        />
-        <path
-          d="M36 70 Q52 55 58 42 Q63 32 55 26"
-          stroke="rgba(196,181,253,0.3)"
-          strokeWidth="2"
-          strokeLinecap="round"
-          fill="none"
-        />
-        {/* Tail tip */}
-        <circle cx="55" cy="26" r="4" fill="#c4b5fd" opacity="0.9" />
+      {/* ── TAIL ── */}
+      <g transform={`rotate(${tailAngle}, 40, 78)`} style={{ transformOrigin: '40px 78px' }}>
+        <path d="M40 78 Q58 62 65 48 Q71 35 62 28"
+          stroke="url(#gc-tail)" strokeWidth="5.5" strokeLinecap="round" fill="none" opacity="0.9" />
+        <path d="M40 78 Q58 62 65 48 Q71 35 62 28"
+          stroke="rgba(196,181,253,0.35)" strokeWidth="2" strokeLinecap="round" fill="none" />
+        <circle cx="62" cy="28" r="4.5" fill="#c4b5fd" opacity="0.9" />
       </g>
 
-      {/* === BODY === */}
-      <ellipse cx="36" cy="58" rx="18" ry="16" fill="url(#cg-body)" />
-      {/* Body 3D shading */}
-      <ellipse cx="30" cy="54" rx="10" ry="7" fill="rgba(255,255,255,0.08)" />
-      <ellipse cx="42" cy="62" rx="10" ry="7" fill="rgba(0,0,0,0.12)" />
-      {/* Belly highlight */}
-      <ellipse cx="36" cy="56" rx="10" ry="9" fill="url(#cg-belly)" />
+      {/* ── BODY ── */}
+      <ellipse cx="40" cy="64" rx="20" ry="17" fill="url(#gc-body)" />
+      <ellipse cx="34" cy="59" rx="11"  ry="8"  fill="rgba(255,255,255,0.09)" />
+      <ellipse cx="47" cy="69" rx="11"  ry="8"  fill="rgba(0,0,0,0.13)" />
+      <ellipse cx="40" cy="62" rx="11"  ry="10" fill="url(#gc-belly)" />
 
-      {/* === PAWS (walking) === */}
-      <ellipse
-        cx="24"
-        cy="72"
-        rx="5.5"
-        ry="3.5"
-        fill="#7c3aed"
-        transform={`translate(0, ${Math.sin(walkRef.current * 2) * 1.5})`}
-      />
-      <ellipse
-        cx="36"
-        cy="73"
-        rx="5"
-        ry="3.2"
-        fill="#6d28d9"
-        transform={`translate(0, ${Math.sin(walkRef.current * 2 + 1) * 1.5})`}
-      />
-      <ellipse
-        cx="48"
-        cy="72"
-        rx="5.5"
-        ry="3.5"
-        fill="#7c3aed"
-        transform={`translate(0, ${Math.sin(walkRef.current * 2 + 2) * 1.5})`}
-      />
-      {/* Paw toe details */}
-      {[22, 24.5, 27].map((x, i) => (
-        <circle key={i} cx={x} cy={74} r="1.2" fill="#5b21b6" />
+      {/* ── PAWS ── */}
+      {[24, 40, 56].map((cx, i) => (
+        <ellipse
+          key={cx}
+          cx={cx} cy="80" rx="6" ry="3.8"
+          fill={i === 1 ? '#6d28d9' : '#7c3aed'}
+          transform={`translate(0,${Math.sin(walkT * 2 + i) * 1.6})`}
+        />
       ))}
-      {[46, 48.5, 51].map((x, i) => (
-        <circle key={i} cx={x} cy={74} r="1.2" fill="#5b21b6" />
+      {/* toe dots */}
+      {[21,24,27].map((x,i) => <circle key={i} cx={x} cy={82} r="1.3" fill="#4c1d95" />)}
+      {[53,56,59].map((x,i) => <circle key={i} cx={x} cy={82} r="1.3" fill="#4c1d95" />)}
+
+      {/* ── HEAD ── */}
+      <circle cx="40" cy="33" r="26" fill="url(#gc-head)" />
+      <ellipse cx="33" cy="24" rx="13" ry="9" fill="rgba(255,255,255,0.13)" />
+      <circle  cx="40" cy="33" r="26" fill="none" stroke="rgba(91,33,182,0.45)" strokeWidth="2" />
+
+      {/* ── EARS ── */}
+      <polygon points="16,15 9,0 25,11"  fill="#7c3aed" />
+      <polygon points="17,13 12,3 22,10" fill="#c4b5fd" />
+      <polygon points="17,13 13,5 21,10" fill="rgba(253,164,175,0.65)" />
+      <polygon points="64,15 71,0 55,11"  fill="#7c3aed" />
+      <polygon points="63,13 68,3 58,10" fill="#c4b5fd" />
+      <polygon points="63,13 67,5 59,10" fill="rgba(253,164,175,0.65)" />
+
+      {/* ── FOREHEAD STRIPE ── */}
+      <path d="M40 16 Q42 25 40 33" stroke="rgba(167,139,250,0.35)" strokeWidth="2.5" strokeLinecap="round" fill="none" />
+
+      {/* ── CHEEKS ── */}
+      <ellipse cx="22" cy="39" rx="9" ry="6" fill="url(#gc-cheek)" />
+      <ellipse cx="58" cy="39" rx="9" ry="6" fill="url(#gc-cheek)" />
+
+      {/* ── EYES ── */}
+      <ellipse cx="30" cy="31" rx="7.5" ry={eyeRY + 1.2} fill="white" />
+      <ellipse cx="50" cy="31" rx="7.5" ry={eyeRY + 1.2} fill="white" />
+      <ellipse cx="30" cy="31" rx="4"   ry={pupRY}        fill="#1e1b4b" />
+      <ellipse cx="50" cy="31" rx="4"   ry={pupRY}        fill="#1e1b4b" />
+      <ellipse cx="30" cy="31" rx="6"   ry={eyeRY}        fill="none" stroke="#7c3aed" strokeWidth="1.5" />
+      <ellipse cx="50" cy="31" rx="6"   ry={eyeRY}        fill="none" stroke="#7c3aed" strokeWidth="1.5" />
+      {/* catchlights */}
+      <circle cx="27" cy="28" r="1.6" fill="white" opacity="0.95" />
+      <circle cx="47" cy="28" r="1.6" fill="white" opacity="0.95" />
+      <circle cx="32" cy="33" r="0.9" fill="white" opacity="0.5"  />
+      <circle cx="52" cy="33" r="0.9" fill="white" opacity="0.5"  />
+      {/* iris shimmer */}
+      <ellipse cx="28" cy="30" rx="2" ry={pupRY * 0.5} fill="rgba(167,139,250,0.4)" />
+      <ellipse cx="48" cy="30" rx="2" ry={pupRY * 0.5} fill="rgba(167,139,250,0.4)" />
+
+      {/* ── NOSE ── */}
+      <polygon points="40,41 37,44.5 43,44.5" fill="url(#gc-nose)" />
+      <circle cx="38.5" cy="43" r="0.9" fill="rgba(0,0,0,0.35)" />
+      <circle cx="41.5" cy="43" r="0.9" fill="rgba(0,0,0,0.35)" />
+
+      {/* ── MOUTH ── */}
+      <path d="M37.5,45 Q40,49 42.5,45"  stroke="#ec4899" strokeWidth="1.6" strokeLinecap="round" fill="none" />
+      <path d="M37,45 Q34,47 33,45"      stroke="#ec4899" strokeWidth="1.3" strokeLinecap="round" fill="none" />
+      <path d="M43,45 Q46,47 47,45"      stroke="#ec4899" strokeWidth="1.3" strokeLinecap="round" fill="none" />
+
+      {/* ── WHISKERS ── */}
+      {[
+        [hovering ? 2 : 6, 34, 25, 36],
+        [hovering ? 1 : 5, 39, 25, 39],
+        [hovering ? 2 : 6, 44, 25, 42],
+        [hovering ? 78 : 74, 34, 55, 36],
+        [hovering ? 79 : 75, 39, 55, 39],
+        [hovering ? 78 : 74, 44, 55, 42],
+      ].map(([x1,y1,x2,y2], i) => (
+        <line key={i} x1={x1} y1={y1} x2={x2} y2={y2}
+          stroke={`rgba(255,255,255,${i < 3 ? 0.65 : 0.55})`}
+          strokeWidth={i % 3 === 2 ? 0.9 : 1.1}
+          strokeLinecap="round" />
       ))}
 
-      {/* === HEAD === */}
-      <circle cx="36" cy="30" r="24" fill="url(#cg-head)" />
-      {/* Head 3D gloss */}
-      <ellipse cx="30" cy="22" rx="12" ry="8" fill="rgba(255,255,255,0.12)" />
-      {/* Head shadow rim */}
-      <circle cx="36" cy="30" r="24" fill="none" stroke="rgba(91,33,182,0.4)" strokeWidth="2" />
-
-      {/* === EARS === */}
-      {/* Left ear */}
-      <polygon points="14,14 8,0 22,10" fill="#7c3aed" />
-      <polygon points="15,12 11,3 20,9" fill="#c4b5fd" />
-      {/* Left ear inner pink */}
-      <polygon points="15,12 12,5 19,9" fill="rgba(249,168,212,0.6)" />
-      {/* Right ear */}
-      <polygon points="58,14 64,0 50,10" fill="#7c3aed" />
-      <polygon points="57,12 61,3 52,9" fill="#c4b5fd" />
-      <polygon points="57,12 60,5 53,9" fill="rgba(249,168,212,0.6)" />
-
-      {/* === FACE STRIPE / MARKING === */}
-      <path d="M36 14 Q38 22 36 30" stroke="rgba(167,139,250,0.3)" strokeWidth="2.5" strokeLinecap="round" fill="none" />
-
-      {/* === CHEEKS === */}
-      <ellipse cx="20" cy="36" rx="8" ry="5" fill="url(#cg-cheek-l)" />
-      <ellipse cx="52" cy="36" rx="8" ry="5" fill="url(#cg-cheek-r)" />
-
-      {/* === EYES === */}
-      {/* Eye whites */}
-      <ellipse cx="27" cy="28" rx="6.5" ry={eyeH / 2 + 1} fill="white" />
-      <ellipse cx="45" cy="28" rx="6.5" ry={eyeH / 2 + 1} fill="white" />
-      {/* Pupils */}
-      <ellipse cx="27" cy="28" rx="3.5" ry={pupilH / 2} fill="#1e1b4b" />
-      <ellipse cx="45" cy="28" rx="3.5" ry={pupilH / 2} fill="#1e1b4b" />
-      {/* Iris ring */}
-      <ellipse cx="27" cy="28" rx="5" ry={eyeH / 2} fill="none" stroke="#7c3aed" strokeWidth="1" />
-      <ellipse cx="45" cy="28" rx="5" ry={eyeH / 2} fill="none" stroke="#7c3aed" strokeWidth="1" />
-      {/* Catchlights */}
-      <circle cx="24.5" cy="25.5" r="1.4" fill="white" opacity="0.95" />
-      <circle cx="42.5" cy="25.5" r="1.4" fill="white" opacity="0.95" />
-      <circle cx="29" cy="30" r="0.8" fill="white" opacity="0.5" />
-      <circle cx="47" cy="30" r="0.8" fill="white" opacity="0.5" />
-
-      {/* === NOSE === */}
-      <polygon points="36,37 33.5,40 38.5,40" fill="url(#cg-nose)" />
-      {/* Nostrils */}
-      <circle cx="34.5" cy="39" r="0.8" fill="rgba(0,0,0,0.3)" />
-      <circle cx="37.5" cy="39" r="0.8" fill="rgba(0,0,0,0.3)" />
-
-      {/* === MOUTH === */}
-      <path d="M34,41 Q36,44.5 38,41" stroke="#ec4899" strokeWidth="1.5" strokeLinecap="round" fill="none" />
-      <path d="M33.5,41 Q31,42.5 30,41" stroke="#ec4899" strokeWidth="1.2" strokeLinecap="round" fill="none" />
-      <path d="M38.5,41 Q41,42.5 42,41" stroke="#ec4899" strokeWidth="1.2" strokeLinecap="round" fill="none" />
-
-      {/* === WHISKERS (responsive) === */}
-      <line x1={isHovering ? "4" : "8"} y1="31" x2="22" y2="33" stroke="rgba(255,255,255,0.65)" strokeWidth="1" strokeLinecap="round" />
-      <line x1={isHovering ? "3" : "7"} y1="36" x2="22" y2="35.5" stroke="rgba(255,255,255,0.65)" strokeWidth="1" strokeLinecap="round" />
-      <line x1={isHovering ? "4" : "8"} y1="41" x2="22" y2="38" stroke="rgba(255,255,255,0.45)" strokeWidth="0.8" strokeLinecap="round" />
-      <line x1={isHovering ? "68" : "64"} y1="31" x2="50" y2="33" stroke="rgba(255,255,255,0.65)" strokeWidth="1" strokeLinecap="round" />
-      <line x1={isHovering ? "69" : "65"} y1="36" x2="50" y2="35.5" stroke="rgba(255,255,255,0.65)" strokeWidth="1" strokeLinecap="round" />
-      <line x1={isHovering ? "68" : "64"} y1="41" x2="50" y2="38" stroke="rgba(255,255,255,0.45)" strokeWidth="0.8" strokeLinecap="round" />
-
-      {/* === Crown / Sparkle on head === */}
-      {isHovering && (
-        <>
-          <circle cx="36" cy="6" r="2.5" fill="#fde68a" opacity="0.9" />
-          <circle cx="28" cy="8" r="1.8" fill="#fde68a" opacity="0.7" />
-          <circle cx="44" cy="8" r="1.8" fill="#fde68a" opacity="0.7" />
-          <line x1="36" y1="2" x2="36" y2="10" stroke="#fbbf24" strokeWidth="1" />
-          <line x1="32" y1="4" x2="40" y2="10" stroke="#fbbf24" strokeWidth="0.8" />
-          <line x1="40" y1="4" x2="32" y2="10" stroke="#fbbf24" strokeWidth="0.8" />
-        </>
+      {/* ── HOVER CROWN ── */}
+      {hovering && (
+        <g filter="url(#gc-inner-glow)">
+          <polygon points="40,5 42,11 48,8 44,14 50,14 40,20 30,14 36,14 32,8 38,11" fill="#fde68a" opacity="0.9" />
+          <circle cx="40" cy="3" r="2.5" fill="#fbbf24" opacity="0.9" />
+        </g>
       )}
 
-      {/* Click burst */}
-      {isClicking && (
+      {/* ── CLICK BURST ── */}
+      {clicking && (
         <>
-          <circle cx="36" cy="30" r="28" fill="none" stroke="rgba(196,181,253,0.4)" strokeWidth="2" />
-          <circle cx="36" cy="30" r="32" fill="none" stroke="rgba(167,139,250,0.2)" strokeWidth="1" />
+          <circle cx="40" cy="33" r="30" fill="none" stroke="rgba(196,181,253,0.5)" strokeWidth="2" />
+          <circle cx="40" cy="33" r="36" fill="none" stroke="rgba(167,139,250,0.25)" strokeWidth="1" />
+          {[0,60,120,180,240,300].map(angle => (
+            <line key={angle}
+              x1={40 + Math.cos(angle * Math.PI/180) * 32}
+              y1={33 + Math.sin(angle * Math.PI/180) * 32}
+              x2={40 + Math.cos(angle * Math.PI/180) * 40}
+              y2={33 + Math.sin(angle * Math.PI/180) * 40}
+              stroke="rgba(196,181,253,0.6)" strokeWidth="1.5" strokeLinecap="round" />
+          ))}
         </>
       )}
     </svg>

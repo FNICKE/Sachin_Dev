@@ -2,7 +2,10 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import api, { BASE_URL } from '@/lib/api';
-import { Calendar, Clock, ChevronRight, Search, BookOpen, Tag, Rss, Flame, TrendingUp, FileText, Bookmark, Feather, Hash } from 'lucide-react';
+import {
+  Calendar, Clock, ChevronRight, Search, BookOpen, Tag,
+  Rss, Flame, FileText, Bookmark, Feather, Hash, TrendingUp
+} from 'lucide-react';
 import Link from 'next/link';
 
 const getImageUrl = (url) => {
@@ -11,10 +14,18 @@ const getImageUrl = (url) => {
   return `${BASE_URL}${url.startsWith('/') ? '' : '/'}${url}`;
 };
 
-// Skeleton card
+const fallbackIcons = [
+  <FileText size={48} key="f" />,
+  <Bookmark size={48} key="b" />,
+  <Flame size={48} key="fl" />,
+  <Feather size={48} key="fe" />,
+  <Hash size={48} key="h" />,
+];
+
 function BlogSkeleton() {
   return (
-    <div className="glass-panel rounded-3xl overflow-hidden border border-white/5 animate-pulse">
+    <div className="rounded-3xl overflow-hidden animate-pulse"
+      style={{ background: 'rgba(10,15,30,0.8)', border: '1px solid rgba(255,255,255,0.06)' }}>
       <div className="skeleton aspect-[16/10]" />
       <div className="p-7 space-y-4">
         <div className="skeleton h-3 w-1/3 rounded" />
@@ -26,7 +37,6 @@ function BlogSkeleton() {
   );
 }
 
-// Blog card
 function BlogCard({ blog, index, featured = false }) {
   const [hovered, setHovered] = useState(false);
 
@@ -36,42 +46,51 @@ function BlogCard({ blog, index, featured = false }) {
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, scale: 0.92 }}
       transition={{ duration: 0.4, delay: index * 0.07 }}
-      whileHover={{ y: -6 }}
       onHoverStart={() => setHovered(true)}
       onHoverEnd={() => setHovered(false)}
-      className={`group glass-panel rounded-3xl overflow-hidden border border-white/5 hover:border-indigo-500/25 transition-all duration-500 ${
-        featured ? 'md:col-span-2 lg:col-span-2' : ''
-      }`}
-      style={{ boxShadow: hovered ? '0 20px 60px -10px rgba(99,102,241,0.2)' : undefined }}
+      className={`group rounded-3xl overflow-hidden transition-all duration-500 ${featured ? 'md:col-span-2 lg:col-span-2' : ''}`}
+      style={{
+        background: 'linear-gradient(145deg, rgba(15,22,41,0.9), rgba(10,15,30,0.95))',
+        border: hovered ? '1px solid rgba(99,102,241,0.3)' : '1px solid rgba(255,255,255,0.06)',
+        boxShadow: hovered ? '0 25px 60px -10px rgba(0,0,0,0.6), 0 0 50px -20px rgba(99,102,241,0.25)' : '0 10px 30px rgba(0,0,0,0.3)',
+        transform: hovered ? 'translateY(-6px)' : 'translateY(0)',
+      }}
     >
       <Link href={`/blog/${blog.slug}`} className="block h-full">
         {/* Image */}
-        <div className={`relative overflow-hidden bg-gradient-to-br from-indigo-900/40 to-purple-900/40 ${featured ? 'aspect-[21/9]' : 'aspect-[16/10]'}`}>
+        <div
+          className={`relative overflow-hidden ${featured ? 'aspect-[21/9]' : 'aspect-[16/10]'}`}
+          style={{ background: 'linear-gradient(135deg, rgba(99,102,241,0.15), rgba(168,85,247,0.1))' }}
+        >
           {getImageUrl(blog.cover_url) ? (
             <img
               src={getImageUrl(blog.cover_url)}
               alt={blog.title}
-              className="w-full h-full object-cover transition-all duration-700 group-hover:scale-110 group-hover:brightness-75"
+              className="w-full h-full object-cover transition-all duration-700"
+              style={{
+                transform: hovered ? 'scale(1.08)' : 'scale(1)',
+                filter: hovered ? 'brightness(0.7)' : 'brightness(1)',
+              }}
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center bg-indigo-950/40">
-            <motion.div
-              animate={{ rotate: hovered ? 5 : 0, scale: hovered ? 1.1 : 1 }}
-              className="text-indigo-400 opacity-40"
-            >
-              {[<FileText size={48} key="f" />, <Bookmark size={48} key="b" />, <Flame size={48} key="fl" />, <Feather size={48} key="fe" />, <Hash size={48} key="h" />][index % 5]}
-            </motion.div>
-          </div>
+            <div className="w-full h-full flex items-center justify-center">
+              <motion.div
+                animate={{ rotate: hovered ? 5 : 0, scale: hovered ? 1.1 : 1 }}
+                style={{ color: 'rgba(99,102,241,0.35)' }}
+              >
+                {fallbackIcons[index % 5]}
+              </motion.div>
+            </div>
           )}
-          {/* Gradient overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+
+          <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(2,8,23,0.85) 0%, transparent 60%)' }} />
 
           {/* Tags */}
           <div className="absolute bottom-5 left-5 right-5 flex flex-wrap gap-2">
             {(blog.tags || []).slice(0, 3).map((tag, i) => (
               <span key={i}
-                className="px-3 py-1 text-[9px] font-black uppercase tracking-widest rounded-lg"
-                style={{ background: 'rgba(99,102,241,0.85)', color: 'white' }}
+                className="px-3 py-1 text-[9px] font-black uppercase tracking-widest rounded-lg text-white"
+                style={{ background: 'rgba(99,102,241,0.85)', backdropFilter: 'blur(8px)' }}
               >
                 {tag}
               </span>
@@ -80,40 +99,50 @@ function BlogCard({ blog, index, featured = false }) {
 
           {featured && (
             <div className="absolute top-5 right-5 flex items-center gap-1.5 px-3 py-1.5 rounded-full"
-              style={{ background: 'rgba(239,68,68,0.2)', border: '1px solid rgba(239,68,68,0.4)' }}>
+              style={{ background: 'rgba(239,68,68,0.2)', border: '1px solid rgba(239,68,68,0.4)', backdropFilter: 'blur(8px)' }}>
               <Flame size={11} className="text-red-400" />
               <span className="text-red-400 text-[9px] font-black uppercase tracking-widest">Featured</span>
+            </div>
+          )}
+
+          {!featured && (
+            <div className="absolute top-4 left-4">
+              <TrendingUp size={16} className="opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: '#818cf8' }} />
             </div>
           )}
         </div>
 
         {/* Content */}
         <div className="p-7 flex flex-col gap-4">
-          <div className="flex items-center gap-5 text-white/30 text-[10px] font-black uppercase tracking-widest">
+          <div className="flex items-center gap-5 text-[10px] font-black uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.3)' }}>
             <span className="flex items-center gap-1.5">
-              <Calendar size={12} className="text-indigo-400" />
+              <Calendar size={12} style={{ color: '#818cf8' }} />
               {new Date(blog.published_at || blog.created_at).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' })}
             </span>
             <span className="flex items-center gap-1.5">
-              <Clock size={12} className="text-pink-400" />
+              <Clock size={12} style={{ color: '#f9a8d4' }} />
               {blog.read_time || 5} Min Read
             </span>
           </div>
 
-          <h3 className={`font-black text-white group-hover:text-indigo-300 transition-colors leading-tight line-clamp-2 ${featured ? 'text-2xl md:text-3xl' : 'text-xl'}`}>
+          <h3
+            className={`font-black leading-tight line-clamp-2 transition-colors ${featured ? 'text-2xl md:text-3xl' : 'text-xl'}`}
+            style={{ color: hovered ? '#a5b4fc' : 'white' }}
+          >
             {blog.title}
           </h3>
 
-          <p className="text-white/40 text-sm leading-relaxed line-clamp-2 font-medium">
+          <p className="text-sm leading-relaxed line-clamp-2 font-medium" style={{ color: 'rgba(148,153,184,0.65)' }}>
             {blog.excerpt}
           </p>
 
-          <div className="flex items-center justify-between pt-4 border-t border-white/5 mt-auto">
-            <span className="text-[10px] font-black uppercase tracking-widest text-white/40 group-hover:text-indigo-400 transition-colors">
+          <div className="flex items-center justify-between pt-4 mt-auto" style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+            <span className="text-[10px] font-black uppercase tracking-widest transition-colors"
+              style={{ color: hovered ? '#818cf8' : 'rgba(255,255,255,0.35)' }}>
               Read Article
             </span>
             <motion.div animate={{ x: hovered ? 4 : 0 }}>
-              <ChevronRight size={18} className="text-indigo-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+              <ChevronRight size={18} style={{ color: '#818cf8', opacity: hovered ? 1 : 0, transition: 'opacity 0.2s' }} />
             </motion.div>
           </div>
         </div>
@@ -145,7 +174,7 @@ export default function BlogsPage() {
   });
 
   return (
-    <div className="section-padding pt-44 min-h-screen">
+    <div className="min-h-screen pt-44 pb-20 px-6">
       <div className="max-w-7xl mx-auto flex flex-col gap-16">
 
         {/* Header */}
@@ -161,7 +190,7 @@ export default function BlogsPage() {
           <h1 className="text-6xl md:text-8xl font-black tracking-tighter text-white">
             Journal<span className="gradient-text">.</span>
           </h1>
-          <p className="text-xl text-white/40 font-medium leading-relaxed">
+          <p className="text-xl font-medium leading-relaxed" style={{ color: 'rgba(148,153,184,0.7)' }}>
             Exploring the intersections of architectural design, fullstack engineering, and the future of human-machine collaboration.
           </p>
         </motion.div>
@@ -174,12 +203,19 @@ export default function BlogsPage() {
           className="flex flex-col gap-5"
         >
           <div className="relative group max-w-lg">
-            <Search size={18} className="absolute left-5 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-indigo-400 transition-colors" />
+            <Search size={18} className="absolute left-5 top-1/2 -translate-y-1/2 transition-colors"
+              style={{ color: 'rgba(255,255,255,0.2)' }} />
             <input
               type="text" value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
               placeholder="Search by title or tag..."
-              className="w-full bg-white/5 border border-white/10 rounded-2xl pl-12 pr-5 py-4 text-white font-medium focus:outline-none focus:border-indigo-500/50 focus:bg-indigo-500/5 transition-all placeholder:text-white/15 text-sm"
+              className="w-full rounded-2xl pl-12 pr-5 py-4 text-white font-medium focus:outline-none transition-all placeholder:text-white/15 text-sm"
+              style={{
+                background: 'rgba(255,255,255,0.05)',
+                border: '1px solid rgba(255,255,255,0.1)',
+              }}
+              onFocus={e => { e.target.style.borderColor = 'rgba(99,102,241,0.5)'; e.target.style.background = 'rgba(99,102,241,0.05)'; }}
+              onBlur={e => { e.target.style.borderColor = 'rgba(255,255,255,0.1)'; e.target.style.background = 'rgba(255,255,255,0.05)'; }}
             />
           </div>
 
@@ -190,11 +226,16 @@ export default function BlogsPage() {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setActiveTag(tag)}
-                className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all ${
-                  activeTag === tag
-                    ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/30'
-                    : 'bg-white/5 text-white/40 border border-white/10 hover:bg-white/10 hover:text-white/70'
-                }`}
+                className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all"
+                style={activeTag === tag ? {
+                  background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+                  color: 'white',
+                  boxShadow: '0 4px 15px rgba(99,102,241,0.4)',
+                } : {
+                  background: 'rgba(255,255,255,0.04)',
+                  color: 'rgba(255,255,255,0.4)',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                }}
               >
                 <Tag size={10} /> {tag}
               </motion.button>
@@ -203,8 +244,8 @@ export default function BlogsPage() {
         </motion.div>
 
         {/* Count */}
-        <div className="text-white/30 text-sm font-semibold -mt-8">
-          {filtered.length} article{filtered.length !== 1 ? 's' : ''} found
+        <div className="text-sm font-semibold -mt-8" style={{ color: 'rgba(255,255,255,0.3)' }}>
+          <span style={{ color: '#818cf8' }}>{filtered.length}</span> article{filtered.length !== 1 ? 's' : ''} found
         </div>
 
         {/* Grid */}
@@ -213,20 +254,25 @@ export default function BlogsPage() {
             {[...Array(6)].map((_, i) => <BlogSkeleton key={i} />)}
           </div>
         ) : filtered.length === 0 ? (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="text-center py-32 flex flex-col items-center gap-4"
-            >
-              <Search size={48} className="text-white/20" />
-              <div className="text-white/20 font-black text-2xl">No articles found.</div>
-              <p className="text-white/15">Try a different search term or tag.</p>
-            </motion.div>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="text-center py-32 flex flex-col items-center gap-4"
+          >
+            <BookOpen size={48} style={{ color: 'rgba(255,255,255,0.15)' }} />
+            <div className="font-black text-2xl" style={{ color: 'rgba(255,255,255,0.2)' }}>No articles found.</div>
+            <p style={{ color: 'rgba(255,255,255,0.12)' }}>Try a different search term or tag.</p>
+          </motion.div>
         ) : (
           <AnimatePresence mode="popLayout">
             <motion.div layout className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {filtered.map((blog, i) => (
-                <BlogCard key={blog.id} blog={blog} index={i} featured={i === 0 && activeTag === 'All' && !searchTerm} />
+                <BlogCard
+                  key={blog.id}
+                  blog={blog}
+                  index={i}
+                  featured={i === 0 && activeTag === 'All' && !searchTerm}
+                />
               ))}
             </motion.div>
           </AnimatePresence>

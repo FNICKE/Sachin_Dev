@@ -72,6 +72,12 @@ const createBlog = async (req, res) => {
   try {
     if (req.file) {
       cover_url = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+      if (process.env.CLOUDINARY_CLOUD_NAME) {
+         try {
+           const result = await cloudinary.uploader.upload(req.file.path, { folder: 'portfolio/blogs' });
+           cover_url = result.secure_url;
+         } catch (e) { console.log('Cloudinary skip/fail:', e.message); }
+      }
     }
 
     const slug = createSlug(title);
@@ -103,6 +109,12 @@ const updateBlog = async (req, res) => {
     let cover_url = blog.cover_url;
     if (req.file) {
       cover_url = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+      if (process.env.CLOUDINARY_CLOUD_NAME) {
+         try {
+           const result = await cloudinary.uploader.upload(req.file.path, { folder: 'portfolio/blogs' });
+           cover_url = result.secure_url;
+         } catch (e) { console.log('Cloudinary skip/fail:', e.message); }
+      }
     }
 
     const slug = title ? createSlug(title) : blog.slug;
