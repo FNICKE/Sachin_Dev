@@ -35,6 +35,20 @@ app.get('/', (req, res) => {
   res.send('Portfolio API is running...');
 });
 
+app.get('/api/health', (req, res) => {
+  res.json({
+    success: true,
+    message: 'Portfolio API is running...',
+    data: {
+      environment: process.env.NODE_ENV || 'development',
+      commit: process.env.RENDER_GIT_COMMIT || process.env.COMMIT_SHA || 'local',
+      routes: {
+        mediaUploads: '/api/media/uploads',
+      },
+    },
+  });
+});
+
 // Database status check
 app.get('/api/health/db', async (req, res) => {
   try {
