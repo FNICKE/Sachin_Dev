@@ -1,12 +1,8 @@
-import { Inter, Outfit } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import CursorFollower from "@/components/CursorFollower";
 import FloatingObjects from "@/components/FloatingObjects";
-
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
-const outfit = Outfit({ subsets: ["latin"], variable: "--font-outfit" });
 
 export const metadata = {
   title: "Sachin Rathod | Fullstack Developer",
@@ -25,7 +21,7 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className="dark">
-      <body className={`${inter.variable} ${outfit.variable} antialiased min-h-screen flex flex-col`}
+      <body className="antialiased min-h-screen flex flex-col"
         style={{ background: '#020817', color: '#f8fafc' }}>
 
         {/* Dynamic color-shifting background */}

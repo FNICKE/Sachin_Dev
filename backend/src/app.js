@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 const { errorHandler } = require('./middleware/error.middleware');
 
 // Route imports
@@ -9,6 +10,7 @@ const skillRoutes = require('./routes/skill.routes');
 const blogRoutes = require('./routes/blog.routes');
 const contactRoutes = require('./routes/contact.routes');
 const settingRoutes = require('./routes/setting.routes');
+const mediaRoutes = require('./routes/media.routes');
 const pool = require('./config/database');
 
 const app = express();
@@ -17,7 +19,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use('/uploads', express.static('uploads'));
+app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 
 // Routes
 app.use('/api/auth', authRoutes);
@@ -26,6 +28,7 @@ app.use('/api/skills', skillRoutes);
 app.use('/api/blogs', blogRoutes);
 app.use('/api/contacts', contactRoutes);
 app.use('/api/settings', settingRoutes);
+app.use('/api/media', mediaRoutes);
 
 // Health check
 app.get('/', (req, res) => {

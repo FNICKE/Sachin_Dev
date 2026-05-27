@@ -1,7 +1,7 @@
 const pool = require('../config/database');
-const cloudinary = require('../config/cloudinary');
 const { createSlug } = require('../utils/slugify');
 const { successResponse, errorResponse } = require('../utils/response');
+const { storeImage } = require('../utils/mediaStorage');
 
 // Get all projects with skills
 const getAllProjects = async (req, res) => {
@@ -108,22 +108,12 @@ const getById = async (req, res) => {
 
 // Create new project
 const createProject = async (req, res) => {
-  const { title, short_desc, description, live_url, github_url, tech_stack, category, status, featured, sort_order, skill_ids } = req.body;
-  let thumbnail_url = 'https://placehold.co/600x400/020817/white?text=No+Image';
+  const { title, short_desc, description, live_url, github_url, tech_stack, category, status, featured, sort_order, skill_ids, thumbnail_url: selectedThumbnailUrl } = req.body;
+  let thumbnail_url = selectedThumbnailUrl || 'https://placehold.co/600x400/020817/white?text=No+Image';
 
   try {
     if (req.file) {
-      // Prioritize local storage as requested, fallback to Cloudinary if needed
-      thumbnail_url = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
-      
-      // Still attempt Cloudinary if credentials exist (optional background task simulation)
-      if (process.env.CLOUDINARY_CLOUD_NAME) {
-         try {
-           const result = await cloudinary.uploader.upload(req.file.path, { folder: 'portfolio/projects' });
-           // If successful, we could override, but local is what the user asked for
-           thumbnail_url = result.secure_url;
-         } catch (e) { console.log('Cloudinary skip/fail:', e.message); }
-      }
+      thumbnail_url = await storeImage(req.file, req, 'portfolio/projects');
     }
 
     const slug = createSlug(title);
@@ -163,22 +153,15 @@ const createProject = async (req, res) => {
 // Update project
 const updateProject = async (req, res) => {
   const { id } = req.params;
-  const { title, short_desc, description, live_url, github_url, tech_stack, category, status, featured, sort_order, skill_ids } = req.body;
+  const { title, short_desc, description, live_url, github_url, tech_stack, category, status, featured, sort_order, skill_ids, thumbnail_url: selectedThumbnailUrl } = req.body;
 
   try {
     const [current] = await pool.query('SELECT * FROM projects WHERE id = ?', [id]);
     if (current.length === 0) return errorResponse(res, 'Project not found', 404);
 
-    let thumbnail_url = current[0].thumbnail_url;
+    let thumbnail_url = selectedThumbnailUrl || current[0].thumbnail_url;
     if (req.file) {
-      thumbnail_url = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
-      
-      if (process.env.CLOUDINARY_CLOUD_NAME) {
-         try {
-           const result = await cloudinary.uploader.upload(req.file.path, { folder: 'portfolio/projects' });
-           thumbnail_url = result.secure_url;
-         } catch (e) { console.log('Cloudinary update skip:', e.message); }
-      }
+      thumbnail_url = await storeImage(req.file, req, 'portfolio/projects');
     }
 
     const slug = title ? createSlug(title) : current[0].slug;
