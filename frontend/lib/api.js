@@ -1,4 +1,9 @@
-export const API_URL = 'https://sachin-dev.onrender.com/api';
+const DEFAULT_API_URL =
+  process.env.NODE_ENV === 'development'
+    ? 'http://localhost:5000/api'
+    : 'https://sachin-dev.onrender.com/api';
+
+export const API_URL = process.env.NEXT_PUBLIC_API_URL || DEFAULT_API_URL;
 export const BASE_URL = API_URL.replace('/api', '');
 
 const getAuthHeaders = () => {
@@ -7,8 +12,32 @@ const getAuthHeaders = () => {
     'Content-Type': 'application/json',
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
   };
-  console.log('Sending Headers:', headers); // DEBUG
   return headers;
+};
+
+const readResponse = async (res) => {
+  const contentType = res.headers.get('content-type') || '';
+
+  if (contentType.includes('application/json')) {
+    return res.json();
+  }
+
+  const text = await res.text();
+  return {
+    success: false,
+    message: text || `Request failed with status ${res.status}`,
+  };
+};
+
+const checkResponse = async (res) => {
+  const data = await readResponse(res);
+  if (!res.ok) {
+    const errorMsg = data?.message || data?.error || `Request failed with status ${res.status}`;
+    const error = new Error(errorMsg);
+    error.response = { data, status: res.status };
+    throw error;
+  }
+  return { data };
 };
 
 const api = {
@@ -20,9 +49,7 @@ const api = {
       method: 'GET',
       headers,
     });
-    const data = await res.json();
-    if (!res.ok) throw { response: { data, status: res.status } };
-    return { data };
+    return checkResponse(res);
   },
 
   post: async (url, body = {}, config = {}) => {
@@ -40,9 +67,7 @@ const api = {
       headers,
       body: isFormData ? body : JSON.stringify(body),
     });
-    const data = await res.json();
-    if (!res.ok) throw { response: { data, status: res.status } };
-    return { data };
+    return checkResponse(res);
   },
 
   put: async (url, body = {}, config = {}) => {
@@ -59,9 +84,7 @@ const api = {
       headers,
       body: isFormData ? body : JSON.stringify(body),
     });
-    const data = await res.json();
-    if (!res.ok) throw { response: { data, status: res.status } };
-    return { data };
+    return checkResponse(res);
   },
 
   delete: async (url, config = {}) => {
@@ -72,9 +95,7 @@ const api = {
       method: 'DELETE',
       headers,
     });
-    const data = await res.json();
-    if (!res.ok) throw { response: { data, status: res.status } };
-    return { data };
+    return checkResponse(res);
   },
 };
 

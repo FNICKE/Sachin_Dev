@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, Sparkles } from 'lucide-react';
+import { Menu, X, Sparkles, Code2 } from 'lucide-react';
 
 const navLinks = [
   { name: 'Home', href: '/' },
@@ -29,7 +29,6 @@ export default function Navbar() {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  // Close on route change
   useEffect(() => { const id = setTimeout(() => setOpen(false), 0); return () => clearTimeout(id); }, [pathname]);
 
   if (pathname?.startsWith('/admin')) return null;
@@ -37,12 +36,12 @@ export default function Navbar() {
   return (
     <>
       {/* Reading progress bar */}
-      <div
-        className="fixed top-0 left-0 h-[2px] z-[100] transition-all duration-100"
+      <motion.div
+        className="fixed top-0 left-0 h-[2px] z-[100]"
         style={{
           width: `${scrollProgress}%`,
           background: 'linear-gradient(90deg, #6366f1, #ec4899, #06b6d4)',
-          boxShadow: '0 0 10px rgba(99,102,241,0.6)',
+          boxShadow: '0 0 8px rgba(99,102,241,0.6)',
         }}
       />
 
@@ -52,9 +51,15 @@ export default function Navbar() {
         transition={{ duration: 0.5, ease: 'easeOut' }}
         className={`fixed top-4 left-1/2 -translate-x-1/2 w-[95%] max-w-7xl z-50 transition-all duration-500 rounded-2xl ${
           scrolled || open
-            ? 'py-2.5 glass-panel bg-[#020817]/70 border border-white/10 shadow-2xl shadow-black/60 backdrop-blur-2xl'
+            ? 'py-2.5'
             : 'py-4 bg-transparent border-transparent'
         }`}
+        style={scrolled || open ? {
+          background: 'rgba(2,8,23,0.85)',
+          backdropFilter: 'blur(24px) saturate(180%)',
+          border: '1px solid rgba(255,255,255,0.08)',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.02)',
+        } : {}}
       >
         <div className="max-w-7xl mx-auto px-5 flex items-center justify-between">
           {/* Logo */}
@@ -63,14 +68,16 @@ export default function Navbar() {
               whileHover={{ scale: 1.05, rotate: 5 }}
               whileTap={{ scale: 0.95 }}
               className="relative w-9 h-9 rounded-xl overflow-hidden flex items-center justify-center"
-              style={{ background: 'linear-gradient(135deg,#6366f1,#ec4899)' }}
+              style={{ background: 'linear-gradient(135deg, #6366f1, #ec4899)' }}
             >
               <span className="text-white font-black text-lg z-10">S</span>
-              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                style={{ background: 'linear-gradient(135deg,#8b5cf6,#f43f5e)' }} />
+              <div
+                className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                style={{ background: 'linear-gradient(135deg, #8b5cf6, #f43f5e)' }}
+              />
             </motion.div>
             <span className="font-black text-lg tracking-tight text-white/90 group-hover:text-white transition-colors hidden sm:block">
-              Sachin Rathod
+              Sachin.<span style={{ color: '#818cf8' }}>dev</span>
             </span>
           </Link>
 
@@ -83,16 +90,17 @@ export default function Navbar() {
                   key={link.name}
                   href={link.href}
                   className={`relative px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200 ${
-                    isActive
-                      ? 'text-white'
-                      : 'text-white/50 hover:text-white hover:bg-white/5'
+                    isActive ? 'text-white' : 'text-white/50 hover:text-white hover:bg-white/5'
                   }`}
                 >
                   {isActive && (
                     <motion.div
                       layoutId="nav-active"
                       className="absolute inset-0 rounded-xl"
-                      style={{ background: 'rgba(99,102,241,0.15)', border: '1px solid rgba(99,102,241,0.25)' }}
+                      style={{
+                        background: 'rgba(99,102,241,0.12)',
+                        border: '1px solid rgba(99,102,241,0.22)',
+                      }}
                       transition={{ type: 'spring', stiffness: 300, damping: 30 }}
                     />
                   )}
@@ -105,14 +113,22 @@ export default function Navbar() {
           {/* CTA + mobile toggle */}
           <div className="flex items-center gap-3">
             <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} className="hidden md:block">
-              <Link href="/contact" className="btn-premium btn-primary flex items-center gap-2 text-sm py-2.5 px-5">
+              <Link
+                href="/contact"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white transition-all duration-200"
+                style={{
+                  background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+                  boxShadow: '0 4px 15px rgba(99,102,241,0.4)',
+                }}
+              >
                 <Sparkles size={14} className="text-yellow-300" />
                 Hire Me
               </Link>
             </motion.div>
 
             <button
-              className="md:hidden p-2 rounded-xl text-white/60 hover:text-white hover:bg-white/8 transition-all"
+              className="md:hidden p-2 rounded-xl transition-all"
+              style={{ color: 'rgba(255,255,255,0.6)', background: 'rgba(255,255,255,0.05)' }}
               onClick={() => setOpen(!open)}
               aria-label="Toggle menu"
             >
@@ -155,9 +171,13 @@ export default function Navbar() {
                         href={link.href}
                         className={`flex items-center justify-between px-4 py-3.5 rounded-2xl text-base font-semibold transition-all ${
                           isActive
-                            ? 'text-white bg-indigo-500/15 border border-indigo-500/25'
+                            ? 'text-white'
                             : 'text-white/60 hover:text-white hover:bg-white/5'
                         }`}
+                        style={isActive ? {
+                          background: 'rgba(99,102,241,0.12)',
+                          border: '1px solid rgba(99,102,241,0.22)',
+                        } : {}}
                       >
                         {link.name}
                         {isActive && <div className="w-1.5 h-1.5 rounded-full bg-indigo-400" />}
@@ -171,7 +191,11 @@ export default function Navbar() {
                   transition={{ delay: navLinks.length * 0.05 }}
                   className="mt-2"
                 >
-                  <Link href="/contact" className="btn-premium btn-primary w-full py-3.5 text-sm flex items-center justify-center gap-2">
+                  <Link
+                    href="/contact"
+                    className="w-full py-3.5 text-sm flex items-center justify-center gap-2 rounded-2xl font-bold text-white"
+                    style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}
+                  >
                     <Sparkles size={14} className="text-yellow-300" /> Hire Me
                   </Link>
                 </motion.div>

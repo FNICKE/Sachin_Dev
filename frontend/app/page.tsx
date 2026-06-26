@@ -2,12 +2,18 @@ import HeroSection from '@/components/sections/HeroSection';
 import ProjectsGrid from '@/components/sections/ProjectsGrid';
 import SkillsSection from '@/components/sections/SkillsSection';
 import Link from 'next/link';
-import { ArrowRight, Sparkles, Rocket, Code2, Zap } from 'lucide-react';
+import { ArrowRight, Sparkles, Rocket, Code2, Zap, Star, TrendingUp } from 'lucide-react';
 
 export const metadata = {
   title: 'Sachin Rathod | Fullstack Developer',
   description: 'Portfolio of Sachin Rathod — Fullstack Developer crafting high-performance, pixel-perfect web applications.',
 };
+
+const statItems = [
+  { icon: <Rocket size={32} />, label: 'Projects Built', value: '20+', color: '#6366f1', glow: 'rgba(99,102,241,0.15)' },
+  { icon: <TrendingUp size={32} />, label: 'Tech In Arsenal', value: '15+', color: '#ec4899', glow: 'rgba(236,72,153,0.12)' },
+  { icon: <Star size={32} />, label: 'Happy Clients', value: '15+', color: '#06b6d4', glow: 'rgba(6,182,212,0.12)' },
+];
 
 export default function Home() {
   return (
@@ -26,7 +32,7 @@ export default function Home() {
               Featured{' '}
               <span className="gradient-text">Projects</span>
             </h2>
-            <p className="text-white/40 font-medium mt-3 max-w-md">
+            <p className="mt-3 max-w-md font-medium" style={{ color: 'rgba(148,153,184,0.7)' }}>
               Hand-picked builds that showcase my range — from fullstack apps to pixel-perfect UIs.
             </p>
           </div>
@@ -42,7 +48,7 @@ export default function Home() {
       </section>
 
       {/* ─── Skills ─── */}
-      <section className="max-w-7xl mx-auto px-6 py-28 border-t border-white/5">
+      <section className="max-w-7xl mx-auto px-6 py-28" style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}>
         <div className="flex flex-col items-center text-center max-w-2xl mx-auto mb-14">
           <div className="section-label justify-center">
             <Zap size={13} className="text-yellow-400" /> What I Know
@@ -51,33 +57,42 @@ export default function Home() {
             Technical{' '}
             <span className="gradient-text">Skills</span>
           </h2>
-          <p className="text-white/45 text-lg leading-relaxed font-medium">
+          <p className="text-lg leading-relaxed font-medium" style={{ color: 'rgba(148,153,184,0.7)' }}>
             A broad toolkit to build, ship, and scale production-grade software.
           </p>
         </div>
         <SkillsSection />
       </section>
 
-      {/* ─── MINI ABOUT STRIP ─── */}
+      {/* ─── STATS STRIP ─── */}
       <section className="max-w-7xl mx-auto px-6 py-16">
         <div
-          className="glass-panel rounded-3xl p-8 md:p-12 border border-white/5 grid grid-cols-1 md:grid-cols-3 gap-8 items-center relative overflow-hidden"
+          className="rounded-3xl p-8 md:p-12 grid grid-cols-1 md:grid-cols-3 gap-8 items-center relative overflow-hidden"
+          style={{
+            background: 'linear-gradient(145deg, rgba(15,22,41,0.9), rgba(10,15,30,0.95))',
+            border: '1px solid rgba(255,255,255,0.06)',
+            boxShadow: '0 20px 60px rgba(0,0,0,0.4)',
+          }}
         >
-          {/* Glow */}
+          {/* Decorative glows */}
           <div className="absolute -top-20 -left-20 w-60 h-60 rounded-full pointer-events-none"
             style={{ background: 'radial-gradient(circle, rgba(99,102,241,0.12) 0%, transparent 70%)', filter: 'blur(30px)' }} />
           <div className="absolute -bottom-20 -right-20 w-60 h-60 rounded-full pointer-events-none"
             style={{ background: 'radial-gradient(circle, rgba(236,72,153,0.1) 0%, transparent 70%)', filter: 'blur(30px)' }} />
+          <div className="absolute inset-0 bg-grid-dense opacity-30 pointer-events-none" />
 
-          {[
-            { icon: '🚀', label: 'Projects Built', value: '20+' },
-            { icon: '🎯', label: 'Tech In Arsenal', value: '15+' },
-            { icon: '⭐', label: 'Happy Clients', value: '15+' },
-          ].map(stat => (
-            <div key={stat.label} className="text-center relative z-10">
-              <div className="text-3xl mb-2">{stat.icon}</div>
-              <div className="text-4xl font-black gradient-text mb-1">{stat.value}</div>
-              <div className="text-white/40 font-semibold text-sm uppercase tracking-wider">{stat.label}</div>
+          {statItems.map(stat => (
+            <div key={stat.label} className="text-center relative z-10 group">
+              <div className="text-3xl mb-3">{stat.icon}</div>
+              <div
+                className="text-4xl md:text-5xl font-black mb-2 transition-transform group-hover:scale-110"
+                style={{ color: stat.color, textShadow: `0 0 30px ${stat.glow}` }}
+              >
+                {stat.value}
+              </div>
+              <div className="font-bold text-sm uppercase tracking-wider" style={{ color: 'rgba(148,153,184,0.5)' }}>
+                {stat.label}
+              </div>
             </div>
           ))}
         </div>
@@ -85,14 +100,20 @@ export default function Home() {
 
       {/* ─── CTA BANNER ─── */}
       <section className="max-w-7xl mx-auto px-6 py-28">
-        <div className="glass-panel rounded-3xl p-12 md:p-20 text-center relative overflow-hidden border border-white/5">
+        <div
+          className="rounded-3xl p-12 md:p-20 text-center relative overflow-hidden"
+          style={{
+            background: 'linear-gradient(145deg, rgba(15,22,41,0.95), rgba(10,15,30,0.98))',
+            border: '1px solid rgba(99,102,241,0.15)',
+            boxShadow: '0 30px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.02)',
+          }}
+        >
           {/* Decorative blobs */}
           <div className="absolute -top-20 -left-20 w-72 h-72 rounded-full pointer-events-none"
-            style={{ background: 'radial-gradient(circle, rgba(99,102,241,0.18) 0%, transparent 70%)', filter: 'blur(40px)' }} />
+            style={{ background: 'radial-gradient(circle, rgba(99,102,241,0.2) 0%, transparent 70%)', filter: 'blur(40px)' }} />
           <div className="absolute -bottom-20 -right-20 w-72 h-72 rounded-full pointer-events-none"
-            style={{ background: 'radial-gradient(circle, rgba(236,72,153,0.14) 0%, transparent 70%)', filter: 'blur(40px)' }} />
-          {/* Grid dots */}
-          <div className="absolute inset-0 bg-grid opacity-50 pointer-events-none" />
+            style={{ background: 'radial-gradient(circle, rgba(236,72,153,0.16) 0%, transparent 70%)', filter: 'blur(40px)' }} />
+          <div className="absolute inset-0 bg-grid opacity-40 pointer-events-none" />
 
           <div className="relative z-10">
             <div className="section-label justify-center mb-5">
@@ -102,7 +123,7 @@ export default function Home() {
               Have a project{' '}
               <span className="gradient-text block md:inline">in mind?</span>
             </h2>
-            <p className="text-white/45 text-lg max-w-xl mx-auto mb-10 font-medium leading-relaxed">
+            <p className="text-lg max-w-xl mx-auto mb-10 font-medium leading-relaxed" style={{ color: 'rgba(148,153,184,0.7)' }}>
               I&apos;m always excited to collaborate on meaningful projects.
               Let&apos;s discuss your idea and bring it to life.
             </p>

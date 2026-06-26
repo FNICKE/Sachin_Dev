@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import api from '@/lib/api';
 import { useRouter } from 'next/navigation';
-import { Button, Card } from '@/components/ui';
+import { Button, Card, RichTextEditor } from '@/components/ui';
 import {
   Save,
   X,
@@ -106,6 +106,11 @@ const BlogForm = ({ id }) => {
       Object.keys(formData).forEach(key => {
         if (key === 'tags') {
           submission.append(key, JSON.stringify(formData[key]));
+        } else if (key === 'content') {
+          const cleanedContent = (formData[key] || '')
+            .replace(/&nbsp;/g, ' ')
+            .replace(/\u00a0/g, ' ');
+          submission.append(key, cleanedContent);
         } else {
           submission.append(key, formData[key]);
         }
@@ -142,26 +147,26 @@ const BlogForm = ({ id }) => {
   );
 
   return (
-    <div className="flex flex-col gap-12">
+    <div className="flex flex-col gap-6">
       {/* ─── Header ─── */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <div className="flex items-center gap-4 text-primary font-black uppercase text-xs tracking-[0.25em] mb-4">
-            <span className="w-12 h-[2px] bg-primary/20 rounded-full" />
+          <div className="flex items-center gap-2 text-primary font-black uppercase text-[9px] tracking-[0.2em] mb-1">
+            <span className="w-6 h-[2px] bg-primary/20 rounded-full" />
             Content Strategy
           </div>
-          <h1 className="text-5xl font-black tracking-tighter text-white">
+          <h1 className="text-xl font-black tracking-tight text-white">
             {id ? 'Edit Article' : 'Draft New Insight'}
           </h1>
         </div>
 
         {/* ✅ FIX: These buttons now trigger the form's own submit via ref */}
-        <div className="flex gap-4">
+        <div className="flex gap-3">
           <Button
             type="button"
             variant="outline"
             onClick={() => router.push('/admin/blogs')}
-            className="bg-white/5 border-white/5 px-8 font-bold text-white/40 hover:text-white"
+            className="bg-white/5 border-white/5 px-4 py-2 text-[11px] font-bold text-white/40 hover:text-white rounded-lg"
           >
             Discard
           </Button>
@@ -170,11 +175,11 @@ const BlogForm = ({ id }) => {
             onClick={triggerSubmit}
             disabled={loading}
             variant="primary"
-            className="btn-premium px-12 py-4 font-black shadow-2xl shadow-primary/30 flex items-center gap-4 group active:scale-95 transition-all"
+            className="btn-premium px-6 py-2 text-[11px] font-black shadow-lg shadow-primary/30 flex items-center gap-2 group active:scale-95 transition-all rounded-lg"
           >
             {loading
-              ? <><Loader2 className="animate-spin" size={20} /> Saving...</>
-              : <><Save size={20} /> {id ? 'Publish Revision' : 'Release Article'}</>
+              ? <><Loader2 className="animate-spin" size={14} /> Saving...</>
+              : <><Save size={14} /> {id ? 'Publish Revision' : 'Release Article'}</>
             }
           </Button>
         </div>
@@ -182,26 +187,26 @@ const BlogForm = ({ id }) => {
 
       {/* ─── Status Messages ─── */}
       {error && (
-        <div className="flex items-center gap-3 bg-red-500/10 border border-red-500/20 text-red-400 rounded-2xl px-6 py-4 font-semibold text-sm">
-          <AlertCircle size={18} className="shrink-0" />
+        <div className="flex items-center gap-2.5 bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl px-4 py-2.5 font-semibold text-xs">
+          <AlertCircle size={14} className="shrink-0" />
           {error}
         </div>
       )}
       {success && (
-        <div className="flex items-center gap-3 bg-green-500/10 border border-green-500/20 text-green-400 rounded-2xl px-6 py-4 font-semibold text-sm">
-          <CheckCircle2 size={18} className="shrink-0" />
+        <div className="flex items-center gap-2.5 bg-green-500/10 border border-green-500/20 text-green-400 rounded-xl px-4 py-2.5 font-semibold text-xs">
+          <CheckCircle2 size={14} className="shrink-0" />
           {success}
         </div>
       )}
 
       {/* ✅ FIX: form ref added, submit handled only here */}
-      <form ref={formRef} onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+      <form ref={formRef} onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
         {/* ─── Main Content ─── */}
-        <div className="lg:col-span-2 flex flex-col gap-8">
-          <Card className="p-10 border-white/5 bg-white/5 flex flex-col gap-8">
-            <div className="flex flex-col gap-3">
-              <label className="text-[10px] font-black uppercase tracking-widest text-primary ml-1">
+        <div className="lg:col-span-2 flex flex-col gap-6">
+          <Card className="p-5 border-white/5 bg-white/5 flex flex-col gap-4">
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[9px] font-black uppercase tracking-widest text-primary ml-0.5">
                 Headline <span className="text-red-400">*</span>
               </label>
               <input
@@ -209,13 +214,13 @@ const BlogForm = ({ id }) => {
                 name="title"
                 value={formData.title}
                 onChange={handleChange}
-                className="bg-transparent border-b-2 border-white/10 py-4 text-4xl font-black text-white focus:outline-none focus:border-primary transition-all placeholder:text-white/10"
+                className="bg-transparent border-b border-white/10 py-2 text-sm font-semibold text-white focus:outline-none focus:border-primary transition-all placeholder:text-white/10"
                 placeholder="Enter Article Title..."
               />
             </div>
 
-            <div className="flex flex-col gap-3">
-              <label className="text-[10px] font-black uppercase tracking-widest text-white/40 ml-1">
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[9px] font-black uppercase tracking-widest text-white/40 ml-0.5">
                 Lead Summary (Excerpt) <span className="text-red-400">*</span>
               </label>
               <textarea
@@ -223,33 +228,30 @@ const BlogForm = ({ id }) => {
                 value={formData.excerpt}
                 onChange={handleChange}
                 rows={3}
-                className="bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-lg font-bold text-white/60 focus:outline-none focus:border-primary transition-all placeholder:text-white/5"
+                className="bg-white/5 border border-white/10 rounded-lg px-3.5 py-2 text-xs font-semibold text-white/60 focus:outline-none focus:border-primary transition-all placeholder:text-white/5"
                 placeholder="Catchy summary for the listing page..."
               />
             </div>
 
-            <div className="flex flex-col gap-3">
-              <label className="text-[10px] font-black uppercase tracking-widest text-white/40 ml-1">
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[9px] font-black uppercase tracking-widest text-white/40 ml-0.5">
                 Full Narrative Content <span className="text-red-400">*</span>
               </label>
-              <textarea
-                name="content"
+              <RichTextEditor
                 value={formData.content}
-                onChange={handleChange}
-                rows={15}
-                className="bg-white/5 border border-white/10 rounded-2xl px-8 py-5 text-lg font-medium text-white/80 focus:outline-none focus:border-primary transition-all placeholder:text-white/5 resize-none leading-relaxed"
-                placeholder="Tell your story. Markdown supported."
+                onChange={(val) => setFormData(prev => ({ ...prev, content: val }))}
+                placeholder="Tell your story. Rich text editing supported."
               />
             </div>
           </Card>
         </div>
 
         {/* ─── Sidebar ─── */}
-        <div className="flex flex-col gap-8">
+        <div className="flex flex-col gap-6">
           {/* Cover Image */}
-          <Card className="p-8 border-white/5 bg-white/5 flex flex-col gap-6">
+          <Card className="p-5 border-white/5 bg-white/5 flex flex-col gap-4">
             <h3 className="text-xs font-black uppercase tracking-widest text-white/40">Cover Asset</h3>
-            <div className="relative aspect-video bg-white/5 rounded-2xl border-2 border-dashed border-white/10 hover:border-primary/50 transition-all cursor-pointer group flex items-center justify-center overflow-hidden">
+            <div className="relative aspect-video max-h-32 bg-white/5 rounded-xl border border-dashed border-white/10 hover:border-primary/50 transition-all cursor-pointer group flex items-center justify-center overflow-hidden">
               <input
                 type="file"
                 accept="image/*"
@@ -263,8 +265,8 @@ const BlogForm = ({ id }) => {
                   alt="Cover"
                 />
               ) : (
-                <div className="flex flex-col items-center gap-2 text-white/20 group-hover:text-primary transition-colors">
-                  <ImageIcon size={32} />
+                <div className="flex flex-col items-center gap-1.5 text-white/20 group-hover:text-primary transition-colors">
+                  <ImageIcon size={20} />
                   <span className="text-[10px] font-black uppercase tracking-widest">Select Cover</span>
                 </div>
               )}
@@ -272,13 +274,13 @@ const BlogForm = ({ id }) => {
           </Card>
 
           {/* Read Time */}
-          <Card className="p-8 border-white/5 bg-white/5 flex flex-col gap-6">
-            <div className="flex flex-col gap-4">
-              <label className="text-[10px] font-black uppercase tracking-widest text-white/40">
+          <Card className="p-5 border-white/5 bg-white/5 flex flex-col gap-4">
+            <div className="flex flex-col gap-3">
+              <label className="text-[9px] font-black uppercase tracking-widest text-white/40">
                 Estimated Read Time (Mins)
               </label>
-              <div className="flex items-center gap-4">
-                <ClockIcon size={20} className="text-primary" />
+              <div className="flex items-center gap-2.5">
+                <ClockIcon size={14} className="text-primary" />
                 <input
                   type="number"
                   name="read_time"
@@ -286,14 +288,14 @@ const BlogForm = ({ id }) => {
                   onChange={handleChange}
                   min="1"
                   max="120"
-                  className="bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary w-20 font-black"
+                  className="bg-white/5 border border-white/10 rounded-lg px-2.5 py-1.5 text-white focus:outline-none focus:border-primary w-16 font-black text-xs"
                 />
               </div>
             </div>
           </Card>
 
           {/* Tags */}
-          <Card className="p-8 border-white/5 bg-white/5 flex flex-col gap-6">
+          <Card className="p-5 border-white/5 bg-white/5 flex flex-col gap-4">
             <h3 className="text-xs font-black uppercase tracking-widest text-white/40">Taxonomy Tags</h3>
             <div className="flex gap-2">
               <input
@@ -303,19 +305,19 @@ const BlogForm = ({ id }) => {
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') { e.preventDefault(); addTag(); }
                 }}
-                className="flex-grow bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary text-sm"
+                className="flex-grow bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-white focus:outline-none focus:border-primary text-xs"
                 placeholder="e.g. React, UX, Database"
               />
-              <Button type="button" onClick={addTag} variant="outline" className="bg-white/5 border-white/5 rounded-xl">
-                <Plus size={16} />
+              <Button type="button" onClick={addTag} variant="outline" className="bg-white/5 border-white/5 rounded-lg px-3">
+                <Plus size={14} />
               </Button>
             </div>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-1.5">
               {formData.tags.map((tag, idx) => (
                 <span
                   onClick={() => removeTag(tag)}
                   key={idx}
-                  className="bg-primary/20 border border-primary/30 text-primary text-[10px] font-black px-3 py-1.5 rounded-lg uppercase tracking-widest flex items-center gap-2 cursor-pointer hover:bg-red-400/20 hover:border-red-400/30 hover:text-red-400 transition-all"
+                  className="bg-primary/20 border border-primary/30 text-primary text-[9px] font-black px-2 py-1 rounded-md uppercase tracking-widest flex items-center gap-1.5 cursor-pointer hover:bg-red-400/20 hover:border-red-400/30 hover:text-red-400 transition-all"
                 >
                   {tag} <X size={10} />
                 </span>
@@ -327,13 +329,13 @@ const BlogForm = ({ id }) => {
           </Card>
 
           {/* Publication Status */}
-          <Card className="p-8 border-white/5 bg-white/5 flex flex-col gap-6">
-            <div className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/5">
-              <span className="text-[10px] font-black uppercase tracking-widest text-white/40">
+          <Card className="p-5 border-white/5 bg-white/5 flex flex-col gap-4">
+            <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/5">
+              <span className="text-[9px] font-black uppercase tracking-widest text-white/40">
                 Publication Status
               </span>
-              <div className="flex items-center gap-3">
-                <span className={`text-[10px] font-black uppercase ${formData.published ? 'text-green-400' : 'text-orange-400'}`}>
+              <div className="flex items-center gap-2.5">
+                <span className={`text-[9px] font-black uppercase ${formData.published ? 'text-green-400' : 'text-orange-400'}`}>
                   {formData.published ? 'Published' : 'Draft'}
                 </span>
                 <input
@@ -341,7 +343,7 @@ const BlogForm = ({ id }) => {
                   name="published"
                   checked={formData.published === 1}
                   onChange={handleChange}
-                  className="w-5 h-5 accent-primary cursor-pointer"
+                  className="w-4 h-4 accent-primary cursor-pointer"
                 />
               </div>
             </div>
@@ -351,12 +353,12 @@ const BlogForm = ({ id }) => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-5 rounded-2xl font-black text-sm uppercase tracking-widest text-white transition-all flex items-center justify-center gap-3"
-            style={{ background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)', boxShadow: '0 0 30px rgba(99,102,241,0.3)' }}
+            className="w-full py-2.5 rounded-lg font-black text-xs uppercase tracking-widest text-white transition-all flex items-center justify-center gap-2"
+            style={{ background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)', boxShadow: '0 0 20px rgba(99,102,241,0.2)' }}
           >
             {loading
-              ? <><Loader2 className="animate-spin" size={16} /> Saving...</>
-              : <><Save size={16} /> {id ? 'Publish Revision' : 'Release Article'}</>
+              ? <><Loader2 className="animate-spin" size={14} /> Saving...</>
+              : <><Save size={14} /> {id ? 'Publish Revision' : 'Release Article'}</>
             }
           </button>
         </div>

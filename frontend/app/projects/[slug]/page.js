@@ -153,11 +153,14 @@ export default function ProjectDetailPage() {
                 <CheckCircle2 className="text-indigo-400" size={24} />
                 <h2 className="text-3xl font-black text-white tracking-tight">Project Overview</h2>
               </div>
-              <div className="prose-styles bg-white/5 border border-white/10 rounded-3xl p-8 md:p-10 text-lg text-white/70 leading-relaxed font-medium">
-                {project.description.split('\n').map((paragraph, idx) => (
-                   <p key={idx} className="mb-6 last:mb-0">{paragraph}</p>
-                ))}
-              </div>
+              <div 
+                className="prose-styles bg-white/5 border border-white/10 rounded-3xl p-8 md:p-10 text-lg text-white/70 leading-relaxed font-medium ql-editor"
+                dangerouslySetInnerHTML={{ 
+                  __html: (project.description || '')
+                    .replace(/&nbsp;/g, ' ')
+                    .replace(/\u00a0/g, ' ')
+                }}
+              />
             </div>
 
             {/* Gallery */}
@@ -234,8 +237,9 @@ export default function ProjectDetailPage() {
         ::-webkit-scrollbar-thumb { background: #222; border-radius: 5px; border: 2px solid #050505; }
         ::-webkit-scrollbar-thumb:hover { background: #444; }
         
-        .prose-styles p {
-          text-align: left;
+        .prose-styles p,
+        .prose-styles .ql-align-justify {
+          text-align: left !important;
         }
         .prose-styles strong {
           color: white;

@@ -40,3 +40,6 @@ export const Badge = ({ children, variant = 'primary', className = '' }) => {
     </span>
   );
 };
+
+export { default as RichTextEditor } from './RichTextEditor';
+

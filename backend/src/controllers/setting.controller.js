@@ -1,5 +1,6 @@
 const pool = require('../config/database');
 const { successResponse, errorResponse } = require('../utils/response');
+const { storeImage } = require('../utils/mediaStorage');
 
 // Get Resume URL
 const getResume = async (req, res) => {
@@ -20,7 +21,7 @@ const updateResume = async (req, res) => {
       return errorResponse(res, 'No file uploaded.', 400);
     }
 
-    const resumeUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+    const resumeUrl = await storeImage(req.file, req, 'portfolio/settings');
 
     await pool.query(
       'INSERT INTO site_settings (setting_key, setting_value) VALUES ("resume_url", ?) ON DUPLICATE KEY UPDATE setting_value = ?',

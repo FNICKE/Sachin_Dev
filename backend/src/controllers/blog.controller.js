@@ -1,7 +1,7 @@
 const pool = require('../config/database');
-const cloudinary = require('../config/cloudinary');
 const { createSlug } = require('../utils/slugify');
 const { successResponse, errorResponse } = require('../utils/response');
+const { storeImage } = require('../utils/mediaStorage');
 
 // Get all blogs
 const getAllBlogs = async (req, res) => {
@@ -71,7 +71,7 @@ const createBlog = async (req, res) => {
 
   try {
     if (req.file) {
-      cover_url = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+      cover_url = await storeImage(req.file, req, 'portfolio/blogs');
     }
 
     const slug = createSlug(title);
@@ -102,7 +102,7 @@ const updateBlog = async (req, res) => {
     const blog = rows[0];
     let cover_url = blog.cover_url;
     if (req.file) {
-      cover_url = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+      cover_url = await storeImage(req.file, req, 'portfolio/blogs');
     }
 
     const slug = title ? createSlug(title) : blog.slug;

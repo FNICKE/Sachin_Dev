@@ -48,100 +48,135 @@ const BlogsManagement = () => {
     }
   };
 
-  const filteredBlogs = (blogs || []).filter(b =>
-    b.title?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const [statusFilter, setStatusFilter] = useState('all');
+
+  const filteredBlogs = (blogs || []).filter(b => {
+    const matchesSearch = b.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          b.excerpt?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === 'all' || 
+                          (statusFilter === 'published' && b.published) || 
+                          (statusFilter === 'draft' && !b.published);
+    return matchesSearch && matchesStatus;
+  });
 
   if (loading) return <div className="text-3xl font-black text-white animate-pulse p-20 text-center tracking-tighter italic text-primary">Synchronizing Editorial Database...</div>;
 
   return (
-    <div className="flex flex-col gap-12">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
+    <div className="flex flex-col gap-6">
+      {/* Header Block */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/5 pb-3">
         <div>
-           <div className="flex items-center gap-4 text-primary font-black uppercase text-xs tracking-[0.25em] mb-4">
-              <span className="w-12 h-[2px] bg-primary/20 rounded-full" />
+           <div className="flex items-center gap-2 text-primary font-black uppercase text-[9px] tracking-[0.2em] mb-1">
+              <span className="w-6 h-[2px] bg-primary/20 rounded-full" />
               Content Strategy
            </div>
-           <h1 className="text-5xl font-black tracking-tighter text-white">Editorial Repository</h1>
+           <h1 className="text-xl font-black tracking-tight text-white">Editorial Repository</h1>
         </div>
         <Link href="/admin/blogs/new">
-          <Button variant="primary" className="btn-premium px-10 py-5 text-lg flex items-center gap-4 group">
-            <PlusCircle size={22} className="group-hover:rotate-90 transition-transform" /> Draft New Insight
+          <Button variant="primary" className="btn-premium px-3.5 py-2 text-[11px] font-black uppercase tracking-widest flex items-center gap-2 rounded-lg shadow-lg">
+            <PlusCircle size={14} className="group-hover:rotate-90 transition-transform" strokeWidth={2.5} /> Draft New Insight
           </Button>
         </Link>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-         <div className="md:col-span-2 relative group">
-            <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-white/30 group-focus-within:text-primary transition-colors" size={20} />
+      {/* SaaS Filter Toolbar */}
+      <div className="flex flex-col md:flex-row gap-3 items-center justify-between bg-white/2 border border-white/5 rounded-xl p-3">
+         {/* Search Input */}
+         <div className="relative w-full md:w-80 group">
+            <Search className="absolute left-3.5 top-2.5 text-white/30 group-focus-within:text-primary transition-colors" size={14} />
             <input 
               type="text" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-white/5 border border-white/10 rounded-2xl px-16 py-5 text-white focus:outline-none focus:border-primary transition-all font-medium text-lg placeholder:text-white/20"
+              className="w-full bg-white/5 border border-white/10 rounded-lg py-1.5 pl-10 pr-3 text-xs font-semibold text-white focus:outline-none focus:border-primary transition-all placeholder:text-white/20"
               placeholder="Search articles..."
             />
          </div>
+
+         {/* Selection Filters */}
+         <div className="flex gap-2.5 w-full md:w-auto items-center justify-end">
+            <select 
+              value={statusFilter} 
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-[11px] font-bold text-white/70 focus:outline-none cursor-pointer appearance-none min-w-[120px] text-center"
+            >
+               <option value="all" className="bg-[#020817]">All Statuses</option>
+               <option value="published" className="bg-[#020817]">Published (Live)</option>
+               <option value="draft" className="bg-[#020817]">Draft Mode</option>
+            </select>
+         </div>
       </div>
 
+      {/* Datatable */}
       <Card className="p-0 border-white/5 bg-white/5 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-white/5 bg-white/2">
-                <th className="px-10 py-8 text-xs font-black uppercase tracking-widest text-white/30 text-[10px]">Article Details</th>
-                <th className="px-10 py-8 text-xs font-black uppercase tracking-widest text-white/30 text-[10px]">Taxonomy</th>
-                <th className="px-10 py-8 text-xs font-black uppercase tracking-widest text-white/30 text-[10px]">Engagement</th>
-                <th className="px-10 py-8 text-xs font-black uppercase tracking-widest text-white/30 text-[10px] text-right">Actions</th>
+                <th className="px-5 py-3 text-[9px] font-black uppercase tracking-widest text-white/30">Article Details</th>
+                <th className="px-5 py-3 text-[9px] font-black uppercase tracking-widest text-white/30">Taxonomy</th>
+                <th className="px-5 py-3 text-[9px] font-black uppercase tracking-widest text-white/30">Engagement</th>
+                <th className="px-5 py-3 text-[9px] font-black uppercase tracking-widest text-white/30 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
               {filteredBlogs.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="px-10 py-20 text-center text-white/20 font-bold text-sm">
-                    {searchTerm ? 'No articles match your search.' : 'No articles yet — click "Draft New Insight" to create your first one.'}
+                  <td colSpan={4} className="px-5 py-10 text-center text-white/20 font-bold italic text-xs">
+                    {searchTerm ? 'No articles match your search query.' : 'No articles yet — click "Draft New Insight" to start.'}
                   </td>
                 </tr>
               )}
               {filteredBlogs.map((blog) => (
                 <tr key={blog.id} className="hover:bg-white/2 transition-colors group">
-                  <td className="px-10 py-8">
-                     <div className="flex items-center gap-6">
-                        <div className="w-24 h-16 rounded-xl bg-white/5 overflow-hidden border border-white/5 relative shrink-0">
-                           {blog.cover_url ? <img src={blog.cover_url} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-white/10"><ImageIcon size={24} /></div>}
+                  <td className="px-5 py-2.5">
+                     <div className="flex items-center gap-3">
+                        <div className="w-14 h-8 rounded bg-white/5 overflow-hidden border border-white/5 relative shrink-0">
+                           {blog.cover_url ? <img src={blog.cover_url} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-white/10"><ImageIcon size={14} /></div>}
                         </div>
                         <div>
-                           <p className="text-xl font-black text-white truncate group-hover:text-primary transition-colors">{blog.title}</p>
-                           <div className="flex items-center gap-3 mt-1">
+                           <p className="text-xs font-black text-white truncate group-hover:text-primary transition-colors leading-none">{blog.title}</p>
+                           <div className="flex items-center gap-1.5 mt-1 leading-none">
                               {blog.published ? <Badge variant="success" className="text-[8px] font-black uppercase tracking-widest px-2 py-0.5 border-green-500/20 bg-green-500/5 text-green-500">Live</Badge> : <Badge variant="outline" className="text-[8px] font-black uppercase tracking-widest px-2 py-0.5 border-orange-500/20 bg-orange-500/5 text-orange-500">Draft</Badge>}
-                              <span className="text-[10px] font-bold text-white/20 uppercase tracking-tighter italic">~{blog.read_time} min read</span>
+                              <span className="text-[8px] font-bold text-white/20 uppercase tracking-widest">~{blog.read_time} min read</span>
                            </div>
                         </div>
                      </div>
                   </td>
-                  <td className="px-10 py-8">
-                     <div className="flex flex-wrap gap-2 max-w-[200px]">
+                  <td className="px-5 py-2.5">
+                     <div className="flex flex-wrap gap-1 max-w-[200px]">
                         {(blog.tags || []).map((tag, idx) => (
-                           <span key={idx} className="text-[9px] font-black text-white/40 uppercase tracking-widest bg-white/5 px-2 py-1 rounded">#{tag}</span>
+                           <span key={idx} className="text-[8px] font-black text-white/40 uppercase tracking-widest bg-white/5 px-1.5 py-0.5 rounded">#{tag}</span>
                         ))}
                      </div>
                   </td>
-                  <td className="px-10 py-8">
-                     <div className="flex items-center gap-2 text-white/40 font-bold">
-                        <Eye size={14} className="text-primary" />
-                        <span className="text-sm font-black">{blog.views.toLocaleString()}</span>
+                  <td className="px-5 py-2.5">
+                     <div className="flex items-center gap-1.5 text-white/40 font-bold">
+                        <Eye size={12} className="text-primary" />
+                        <span className="text-[11px] font-black">{(blog.views || 0).toLocaleString()}</span>
                      </div>
                   </td>
-                  <td className="px-10 py-8 text-right">
-                     <div className="flex items-center justify-end gap-2">
+                  <td className="px-5 py-2.5 text-right">
+                     <div className="flex items-center justify-end gap-1.5">
                         <Link href={`/admin/blogs/${blog.id}/edit`}>
-                           <div className="p-3 bg-white/5 text-white/40 hover:text-primary hover:bg-primary/10 rounded-xl transition-all border border-white/5 cursor-pointer"><Edit3 size={18} /></div>
+                           <div className="p-2 bg-white/5 text-white/40 hover:text-primary hover:bg-primary/10 rounded-lg transition-all border border-white/5 cursor-pointer"><Edit3 size={12} /></div>
                         </Link>
-                        <div onClick={() => handleDelete(blog.id)} className="p-3 bg-white/5 text-white/40 hover:text-red-400 hover:bg-red-400/10 rounded-xl transition-all cursor-pointer border border-white/5"><Trash2 size={18} /></div>
+                        <div onClick={() => handleDelete(blog.id)} className="p-2 bg-white/5 text-white/40 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-all cursor-pointer border border-white/5"><Trash2 size={12} /></div>
                      </div>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
+        </div>
+
+        {/* Datatable pagination bar */}
+        <div className="flex items-center justify-between px-5 py-3.5 border-t border-white/5 bg-white/2">
+           <p className="text-[9px] font-black text-white/25 uppercase tracking-widest">
+              Showing {filteredBlogs.length} of {blogs.length} Entries
+           </p>
+           <div className="flex items-center gap-1.5">
+              <button disabled className="px-3 py-1.5 bg-white/5 border border-white/5 text-[8px] font-black uppercase tracking-widest text-white/20 rounded-lg transition-all cursor-not-allowed">Previous</button>
+              <button disabled className="px-3 py-1.5 bg-white/5 border border-white/5 text-[8px] font-black uppercase tracking-widest text-white/20 rounded-lg transition-all cursor-not-allowed">Next</button>
+           </div>
         </div>
       </Card>
     </div>
