@@ -175,7 +175,21 @@ const updateProject = async (req, res) => {
 
     await pool.query(
       'UPDATE projects SET title = ?, slug = ?, short_desc = ?, description = ?, thumbnail_url = ?, live_url = ?, github_url = ?, tech_stack = ?, category = ?, status = ?, featured = ?, sort_order = ? WHERE id = ?',
-      [title || current[0].title, slug, short_desc || current[0].short_desc, description || current[0].description, thumbnail_url, live_url || current[0].live_url, github_url || current[0].github_url, techStackJson, category || current[0].category, status || current[0].status, featured !== undefined ? featured : current[0].featured, sort_order || current[0].sort_order, id]
+      [
+        title || current[0].title,
+        slug,
+        short_desc !== undefined ? short_desc : current[0].short_desc,
+        description !== undefined ? description : current[0].description,
+        thumbnail_url,
+        live_url !== undefined ? live_url : current[0].live_url,
+        github_url !== undefined ? github_url : current[0].github_url,
+        techStackJson,
+        category !== undefined ? category : current[0].category,
+        status !== undefined ? status : current[0].status,
+        featured !== undefined ? featured : current[0].featured,
+        sort_order !== undefined ? sort_order : current[0].sort_order,
+        id
+      ]
     );
 
     // Update skills if provided
