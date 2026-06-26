@@ -621,3 +621,129 @@ input:-webkit-autofill:focus {
 @media (max-width: 30rem) {
   html { font-size: 14px; }
 }
+
+/* ============================================================
+   REACT QUILL DARK MODE OVERRIDES
+   ============================================================ */
+.ql-toolbar.ql-snow {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-top-left-radius: 1rem;
+  border-top-right-radius: 1rem;
+}
+.ql-container.ql-snow {
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-top: none !important;
+  background: rgba(255, 255, 255, 0.01);
+  border-bottom-left-radius: 1rem;
+  border-bottom-right-radius: 1rem;
+  min-height: 250px;
+}
+.ql-editor {
+  min-height: 250px;
+  font-family: 'Inter', sans-serif;
+  font-size: 1.125rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.7) !important;
+  line-height: 1.625;
+  padding: 2rem !important; /* matches p-8 */
+  transition: all 0.3s ease;
+}
+@media (min-width: 768px) {
+  .ql-editor {
+    padding: 2.5rem !important; /* matches md:p-10 */
+  }
+}
+.ql-editor.ql-blank::before {
+  color: rgba(255, 255, 255, 0.15) !important;
+  font-style: normal;
+}
+.ql-snow .ql-stroke {
+  stroke: rgba(255, 255, 255, 0.6) !important;
+}
+.ql-snow .ql-fill {
+  fill: rgba(255, 255, 255, 0.6) !important;
+}
+.ql-snow .ql-picker {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+.ql-snow .ql-picker-label {
+  color: rgba(255, 255, 255, 0.85) !important;
+  border: 1px solid transparent;
+}
+.ql-snow .ql-picker-options {
+  background-color: #0b0f1e !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 0.5rem;
+  padding: 0.375rem !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.5) !important;
+}
+.ql-snow .ql-picker-options .ql-picker-item {
+  color: rgba(255, 255, 255, 0.7) !important;
+  padding: 0.25rem 0.5rem !important;
+  border-radius: 0.25rem;
+  transition: all 0.2s ease;
+}
+.ql-snow .ql-picker-options .ql-picker-item:hover {
+  color: #ffffff !important;
+  background-color: rgba(99, 102, 241, 0.15) !important;
+}
+.ql-snow .ql-picker-item:hover,
+.ql-snow .ql-picker-label:hover {
+  color: var(--primary) !important;
+}
+.ql-snow .ql-picker.ql-expanded .ql-picker-label {
+  color: var(--primary) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  background: rgba(255, 255, 255, 0.03);
+}
+.ql-snow.ql-toolbar button:hover .ql-stroke,
+.ql-snow.ql-toolbar button.ql-active .ql-stroke {
+  stroke: var(--primary) !important;
+}
+.ql-snow.ql-toolbar button:hover .ql-fill,
+.ql-snow.ql-toolbar button.ql-active .ql-fill {
+  fill: var(--primary) !important;
+}
+.ql-snow .ql-out-line {
+  stroke: rgba(255, 255, 255, 0.6) !important;
+}
+
+/* Checklist and Task List Styles */
+.ql-editor li[data-list="checked"]::before,
+.ql-editor li[data-list="unchecked"]::before {
+  color: var(--primary) !important;
+  cursor: pointer;
+}
+.ql-editor li[data-list="checked"] {
+  text-decoration: line-through;
+  opacity: 0.6;
+}
+
+/* Premium Dark Table Styling */
+.ql-editor table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1.5rem 0;
+  background: rgba(255, 255, 255, 0.01);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0.75rem;
+  overflow: hidden;
+}
+.ql-editor td, .ql-editor th {
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 0.75rem 1rem;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 0.95rem;
+  text-align: left;
+}
+.ql-editor th {
+  background: rgba(255, 255, 255, 0.03);
+  font-weight: 600;
+  color: #ffffff;
+}
+.ql-editor tr:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+

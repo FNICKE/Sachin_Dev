@@ -29,6 +29,17 @@ const readResponse = async (res) => {
   };
 };
 
+const checkResponse = async (res) => {
+  const data = await readResponse(res);
+  if (!res.ok) {
+    const errorMsg = data?.message || data?.error || `Request failed with status ${res.status}`;
+    const error = new Error(errorMsg);
+    error.response = { data, status: res.status };
+    throw error;
+  }
+  return { data };
+};
+
 const api = {
   get: async (url, config = {}) => {
     const headers = getAuthHeaders();
@@ -38,9 +49,7 @@ const api = {
       method: 'GET',
       headers,
     });
-    const data = await readResponse(res);
-    if (!res.ok) throw { response: { data, status: res.status } };
-    return { data };
+    return checkResponse(res);
   },
 
   post: async (url, body = {}, config = {}) => {
@@ -58,9 +67,7 @@ const api = {
       headers,
       body: isFormData ? body : JSON.stringify(body),
     });
-    const data = await readResponse(res);
-    if (!res.ok) throw { response: { data, status: res.status } };
-    return { data };
+    return checkResponse(res);
   },
 
   put: async (url, body = {}, config = {}) => {
@@ -77,9 +84,7 @@ const api = {
       headers,
       body: isFormData ? body : JSON.stringify(body),
     });
-    const data = await readResponse(res);
-    if (!res.ok) throw { response: { data, status: res.status } };
-    return { data };
+    return checkResponse(res);
   },
 
   delete: async (url, config = {}) => {
@@ -90,9 +95,7 @@ const api = {
       method: 'DELETE',
       headers,
     });
-    const data = await readResponse(res);
-    if (!res.ok) throw { response: { data, status: res.status } };
-    return { data };
+    return checkResponse(res);
   },
 };
 

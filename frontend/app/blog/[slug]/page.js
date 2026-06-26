@@ -104,8 +104,12 @@ export default function BlogDetailPage() {
                   {/* Main Article narrative */}
                   <article className="prose-styles">
                      <div 
-                       className="relative z-10 leading-loose font-normal text-lg text-white/90"
-                       dangerouslySetInnerHTML={{ __html: blog.content }}
+                       className="relative z-10 leading-loose font-normal text-lg text-white/90 ql-editor"
+                       dangerouslySetInnerHTML={{ 
+                         __html: (blog.content || '')
+                           .replace(/&nbsp;/g, ' ')
+                           .replace(/\u00a0/g, ' ')
+                       }}
                      />
                   </article>
 
@@ -169,7 +173,9 @@ export default function BlogDetailPage() {
         }
         .prose-styles h2 { font-size: 2.2rem; }
         .prose-styles h3 { font-size: 1.7rem; }
-        .prose-styles p {
+        .prose-styles p,
+        .prose-styles .ql-align-justify {
+          text-align: left !important;
           margin-bottom: 1.8rem;
           font-size: 1.15rem;
         }

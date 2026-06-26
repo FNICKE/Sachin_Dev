@@ -1,6 +1,7 @@
 "use client";
 import React from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Github, Linkedin, Mail, ArrowUpRight, Heart, Code2, Sparkles, ArrowRight } from 'lucide-react';
 
@@ -31,7 +32,10 @@ const socials = [
 ];
 
 export default function Footer() {
+  const pathname = usePathname();
   const year = new Date().getFullYear();
+
+  if (pathname?.startsWith('/admin')) return null;
 
   return (
     <footer className="relative mt-20 overflow-hidden" style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}>
