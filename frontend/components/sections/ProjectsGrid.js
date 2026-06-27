@@ -190,7 +190,7 @@ const SkeletonCard = () => (
   </div>
 );
 
-export default function ProjectsGrid({ limit }) {
+export default function ProjectsGrid({ limit = undefined } = {}) {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
 

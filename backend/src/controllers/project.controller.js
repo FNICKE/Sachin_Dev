@@ -208,7 +208,7 @@ const updateProject = async (req, res) => {
     return successResponse(res, null, 'Project updated successfully');
   } catch (error) {
     console.error('Update Project Error:', error);
-    return errorResponse(res, 'Project update failed.');
+    return errorResponse(res, 'Project update failed: ' + error.message);
   }
 };
 
