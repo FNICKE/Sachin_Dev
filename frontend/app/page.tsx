@@ -44,7 +44,7 @@ export default function Home() {
             <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
           </Link>
         </div>
-        <ProjectsGrid limit={3} />
+        <ProjectsGrid />
       </section>
 
       {/* ─── Skills ─── */}

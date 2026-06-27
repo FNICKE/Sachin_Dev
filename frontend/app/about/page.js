@@ -54,10 +54,11 @@ const interests = [
 ];
 
 const timeline = [
-  { year: '2022', title: 'Started Engineering', desc: 'Joined Saraswati College of Engineering for Computer Engineering.', icon: <GraduationCap size={16} />, color: '#6366f1' },
-  { year: '2023', title: 'First Web Project', desc: 'Built my first fullstack app — a task manager using Node.js and MySQL.', icon: <Code2 size={16} />, color: '#ec4899' },
-  { year: '2024', title: 'Freelancing Begins', desc: 'Started taking on freelance projects and building real-world solutions.', icon: <Rocket size={16} />, color: '#06b6d4' },
-  { year: '2025', title: 'Open Source & Scale', desc: 'Diving deep into TypeScript, GraphQL, and scalable cloud architectures.', icon: <Sparkles size={16} />, color: '#8b5cf6' },
+  { year: '2022', title: 'Started Engineering', desc: 'Joined Saraswati College of Engineering for Computer Engineering — the start of a life-changing journey.', icon: <GraduationCap size={16} />, color: '#6366f1' },
+  { year: '2023', title: 'First Web Project', desc: 'Built my first fullstack app — a task manager using Node.js and MySQL. The bug-fixing never stopped.', icon: <Code2 size={16} />, color: '#ec4899' },
+  { year: '2024', title: 'Freelancing Begins', desc: 'Started taking on freelance projects and building real-world client solutions while still in college.', icon: <Rocket size={16} />, color: '#06b6d4' },
+  { year: '2025', title: 'Deep Dive & Scale', desc: 'Diving deep into TypeScript, scalable architectures, and building production-grade portfolio projects.', icon: <Sparkles size={16} />, color: '#8b5cf6' },
+  { year: '2026', title: 'Degree Completed 🎓', desc: "Graduated with a Bachelor's in Computer Engineering from Saraswati College of Engineering. Now building the next chapter full-time.", icon: <GraduationCap size={16} />, color: '#f9a8d4' },
 ];
 
 export default function AboutPage() {
@@ -85,7 +86,7 @@ export default function AboutPage() {
             <span className="text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.5)' }}>Mumbai, India</span>
             <span className="w-1 h-1 rounded-full" style={{ background: 'rgba(255,255,255,0.2)' }} />
             <GraduationCap size={16} style={{ color: '#f9a8d4' }} />
-            <span className="text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.5)' }}>Computer Engineering Student</span>
+            <span className="text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.5)' }}>Computer Engineer</span>
           </div>
 
           <p className="text-lg leading-relaxed mb-10 font-medium" style={{ color: 'rgba(148,153,184,0.8)' }}>
@@ -198,17 +199,22 @@ export default function AboutPage() {
             </h2>
             <div className="space-y-5 text-base leading-relaxed font-medium" style={{ color: 'rgba(148,153,184,0.7)' }}>
               <p>
-                I am a <span className="text-indigo-400 font-bold">Computer Engineering Student</span> at Saraswati College of Engineering,
-                where I bridge the gap between academic theory and real-world full-stack innovation.
+                I&apos;m <span className="text-indigo-400 font-bold">Sachin Rathod</span>, a Computer Engineer who just
+                completed his Bachelor&apos;s degree from{' '}
+                <span className="text-white font-semibold">Saraswati College of Engineering, Mumbai</span>. Four years of
+                engineering wasn&apos;t just lectures and textbooks — it was late-night debugging sessions, weekend projects,
+                and a relentless curiosity that turned a student into a developer.
               </p>
               <p>
-                My developer journey is fueled by a passion for creating{' '}
-                <span className="text-pink-400 font-bold">high-performance web applications</span>.
-                I specialize in the MERN stack while continuously exploring the frontiers of technology to build the future.
+                I specialize in <span className="text-pink-400 font-bold">Fullstack Web Development</span> — building
+                pixel-perfect frontends with Next.js and React, and powerful backends with Node.js, Express, and MySQL.
+                I love the full picture: from designing clean UIs to architecting scalable APIs that can handle real-world load.
               </p>
               <p>
-                <span className="text-cyan-400 font-bold">2025 Goals:</span> Deep-diving into Open Source, mastering Scalable Architectures, and tackling complex problem-solving.
-                Currently sharpening my skills in <span className="text-white">TypeScript, GraphQL, and Serverless Architecture.</span>
+                <span className="text-cyan-400 font-bold">Now that my degree is done</span>, I&apos;m going all-in — open-source
+                contributions, freelance projects, and chasing opportunities where I can make a real impact.
+                Currently exploring <span className="text-white">TypeScript, cloud deployments, and AI-integrated web apps</span>{' '}
+                because the learning never really stops.
               </p>
             </div>
           </section>

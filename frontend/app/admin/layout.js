@@ -3,6 +3,7 @@ import React, { useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
+import ChatbotWrapper from '@/components/ui/ChatbotWrapper';
 import { 
   LayoutDashboard, 
   Briefcase, 
@@ -203,6 +204,9 @@ const AdminRootLayout = ({ children }) => {
         <main className="flex-grow p-6 overflow-x-hidden">
           {children}
         </main>
+
+        {/* AI Chatbot — available on all admin pages */}
+        <ChatbotWrapper />
       </div>
     </div>
   );

@@ -22,12 +22,24 @@ export default function ProjectDetailPage() {
   const router = useRouter();
   const [project, setProject] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [imgError, setImgError] = useState(false);
+
 
   const getImageUrl = (url) => {
     if (!url) return 'https://placehold.co/1200x630/020817/white?text=No+Preview';
-    if (url.startsWith('http')) return url;
+    // Already a Cloudinary or external URL — just ensure https
+    if (url.startsWith('https://')) return url;
+    // Old localhost URL saved in DB before fix — remap to current BASE_URL
+    if (url.includes('localhost') || url.includes('127.0.0.1')) {
+      const relativePart = url.replace(/^https?:\/\/[^/]+/, '');
+      return `${BASE_URL}${relativePart}`;
+    }
+    // Any http URL — upgrade to https
+    if (url.startsWith('http://')) return url.replace('http://', 'https://');
+    // Relative path (e.g. /uploads/filename.jpg)
     return `${BASE_URL}${url.startsWith('/') ? '' : '/'}${url}`;
   };
+
 
   const fetchProject = useCallback(async () => {
     try {
@@ -130,11 +142,21 @@ export default function ProjectDetailPage() {
            <div className="relative bg-white/5 border border-white/10 p-2 md:p-3 rounded-[2rem] overflow-hidden shadow-2xl">
               <div className="w-full bg-[#030303] rounded-[1.5rem] overflow-hidden flex items-center justify-center min-h-[40vh]">
                 {/* using object-contain to ALWAYS make the entire image perfectly visible without cropping */}
-                <img 
-                  src={getImageUrl(project.thumbnail_url)} 
-                  className="w-full h-auto max-h-[75vh] object-contain object-center rounded-[1.5rem]" 
-                  alt={project.title} 
-                />
+                {project.thumbnail_url && !imgError ? (
+                  <img 
+                    src={getImageUrl(project.thumbnail_url)} 
+                    className="w-full h-auto max-h-[75vh] object-contain object-center rounded-[1.5rem]" 
+                    alt={project.title} 
+                    onError={() => setImgError(true)}
+                  />
+                ) : (
+                  <div className="flex flex-col items-center justify-center gap-4 py-20 text-white/30">
+                    <div className="p-6 rounded-2xl bg-indigo-500/10 border border-indigo-500/20">
+                      <Code2 size={48} className="text-indigo-400" />
+                    </div>
+                    <span className="text-sm font-mono uppercase tracking-[0.2em]">{project.category || 'fullstack'}</span>
+                  </div>
+                )}
               </div>
            </div>
         </motion.div>
@@ -173,7 +195,7 @@ export default function ProjectDetailPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   {images.map((img, idx) => (
                     <div key={img.id || idx} className="rounded-2xl overflow-hidden bg-white/5 border border-white/10 shadow-lg cursor-pointer">
-                      <img src={getImageUrl(img.url)} alt={`Gallery ${idx}`} className="w-full h-auto object-cover aspect-video hover:scale-105 transition-transform duration-500" />
+                      <img src={getImageUrl(img.image_url)} alt={`Gallery ${idx}`} className="w-full h-auto object-cover aspect-video hover:scale-105 transition-transform duration-500" />
                     </div>
                   ))}
                 </div>

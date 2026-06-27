@@ -1,9 +1,8 @@
-const DEFAULT_API_URL =
-  process.env.NODE_ENV === 'development'
-    ? 'http://localhost:5000/api'
-    : 'https://sachin-dev.onrender.com/api';
+const DEFAULT_API_URL = 'https://sachin-dev-59j2.onrender.com/api';
 
-export const API_URL = process.env.NEXT_PUBLIC_API_URL || DEFAULT_API_URL;
+export const API_URL = process.env.NEXT_PUBLIC_API_URL
+  ? `${process.env.NEXT_PUBLIC_API_URL}/api`
+  : DEFAULT_API_URL;
 export const BASE_URL = API_URL.replace('/api', '');
 
 const getAuthHeaders = () => {

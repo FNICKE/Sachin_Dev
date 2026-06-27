@@ -18,7 +18,7 @@ const nextConfig = {
         return [
           {
             source: '/api/:path*',
-            destination: 'https://sachin-dev.onrender.com/api/:path*', // Proxy to Backend
+            destination: 'https://sachin-dev-59j2.onrender.com/api/:path*', // Proxy to Backend
           },
         ]
       },

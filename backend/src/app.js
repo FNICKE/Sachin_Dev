@@ -11,6 +11,7 @@ const blogRoutes = require('./routes/blog.routes');
 const contactRoutes = require('./routes/contact.routes');
 const settingRoutes = require('./routes/setting.routes');
 const mediaRoutes = require('./routes/media.routes');
+const chatbotRoutes = require('./routes/chatbot.routes');
 const pool = require('./config/database');
 
 const app = express();
@@ -29,6 +30,7 @@ app.use('/api/blogs', blogRoutes);
 app.use('/api/contacts', contactRoutes);
 app.use('/api/settings', settingRoutes);
 app.use('/api/media', mediaRoutes);
+app.use('/api/chat', chatbotRoutes);
 
 // Health check
 app.get('/', (req, res) => {
