@@ -14,14 +14,6 @@ const nextConfig = {
             }
         ],
     },
-    async rewrites() {
-        return [
-          {
-            source: '/api/:path*',
-            destination: 'https://sachin-dev-59j2.onrender.com/api/:path*', // Proxy to Backend
-          },
-        ]
-      },
 }
 
 module.exports = nextConfig

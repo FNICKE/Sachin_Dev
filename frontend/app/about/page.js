@@ -1,7 +1,8 @@
 "use client";
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import api, { BASE_URL } from '@/lib/api';
 import {
   User, Code2, Brain, Rocket, Mail, Github, Linkedin,
   ExternalLink, Sparkles, MapPin, GraduationCap, Heart, ArrowRight
@@ -62,6 +63,19 @@ const timeline = [
 ];
 
 export default function AboutPage() {
+  const [resumeUrl, setResumeUrl] = useState('https://documentcloud.adobe.com/gsuiteintegration/index.html?state=%7B%22ids%22%3A%5B%2212_CcpuNR5gfAL5vRIWc26COw1ibCB6rO%22%5D%2C%22action%22%3A%22open%22%2C%22userId%22%3A%22109665752571630055379%22%2C%22resourceKeys%22%3A%7B%7D%7D');
+
+  useEffect(() => {
+    api.get('/settings/resume')
+      .then(({ data }) => {
+        if (data?.data?.resume_url) {
+          const url = data.data.resume_url;
+          setResumeUrl(url.startsWith('http') ? url : `${BASE_URL}${url.startsWith('/') ? '' : '/'}${url}`);
+        }
+      })
+      .catch(console.error);
+  }, []);
+
   return (
     <div className="max-w-7xl mx-auto px-6 py-12 pt-36 relative">
       {/* Background orbs */}
@@ -365,7 +379,7 @@ export default function AboutPage() {
 
           {/* Resume */}
           <Link
-            href="https://documentcloud.adobe.com/gsuiteintegration/index.html?state=%7B%22ids%22%3A%5B%221pXLvhJhhc3a4cho4Tm44MoMDNiwtK1op%22%5D%2C%22action%22%3A%22open%22%2C%22userId%22%3A%22109665752571630055379%22%2C%22resourceKeys%22%3A%7B%7D%7D"
+            href={resumeUrl}
             target="_blank" rel="noopener noreferrer"
             className="flex items-center justify-center gap-2 w-full py-4 text-base font-black text-white rounded-2xl transition-all"
             style={{

@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MessageCircle, X, Send, Bot, User, Sparkles, Loader2, ChevronDown, Trash2 } from 'lucide-react';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+import { API_URL } from '@/lib/api';
 
 // ─── Chat message component ────────────────────────────────────────────────────
 const ChatMessage = ({ msg }) => {
@@ -71,7 +71,6 @@ const TypingIndicator = () => (
 
 // ─── Quick suggestion chips ────────────────────────────────────────────────────
 const SUGGESTIONS = [
-  "How do I add a new project?",
   "What tech stack is used?",
   "How does the rich text editor work?",
   "What API endpoints exist?",
@@ -126,7 +125,7 @@ export default function PortfolioChatbot() {
         content: m.content
       }));
 
-      const response = await fetch(`${API_URL}/api/chat`, {
+      const response = await fetch(`${API_URL}/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: userText, history })
