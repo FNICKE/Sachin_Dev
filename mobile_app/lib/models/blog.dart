@@ -1,3 +1,5 @@
+import '../services/api_service.dart';
+
 class Blog {
   final int id;
   final String title;
@@ -41,7 +43,7 @@ class Blog {
       slug: json['slug'] ?? '',
       excerpt: json['excerpt'] ?? '',
       content: json['content'] ?? '',
-      coverUrl: json['cover_url'] ?? '',
+      coverUrl: ApiService.fixImageUrl(json['cover_url'] ?? ''),
       tags: parsedTags,
       published: json['published'] == 1 || json['published'] == true,
       readTime: json['read_time'] is int ? json['read_time'] : int.parse(json['read_time']?.toString() ?? '5'),

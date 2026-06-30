@@ -1,4 +1,5 @@
 import 'skill.dart';
+import '../services/api_service.dart';
 
 class Project {
   final int id;
@@ -57,7 +58,7 @@ class Project {
       slug: json['slug'] ?? '',
       shortDesc: json['short_desc'] ?? '',
       description: json['description'] ?? '',
-      thumbnailUrl: json['thumbnail_url'] ?? '',
+      thumbnailUrl: ApiService.fixImageUrl(json['thumbnail_url'] ?? ''),
       liveUrl: json['live_url'] ?? '',
       githubUrl: json['github_url'] ?? '',
       techStack: parsedTechStack,
