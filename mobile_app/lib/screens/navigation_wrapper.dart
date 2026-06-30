@@ -72,7 +72,7 @@ class _NavigationWrapperState extends State<NavigationWrapper> {
       extendBody: true,
       body: _buildBody(provider),
       floatingActionButton: Padding(
-        padding: const EdgeInsets.only(bottom: 82), // Sits neatly above the floating bottom nav bar
+        padding: const EdgeInsets.only(bottom: 10), // Lowered down
         child: Container(
           width: 56,
           height: 56,
