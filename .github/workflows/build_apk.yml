@@ -1,0 +1,48 @@
+name: Build Android APK
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch: # Allows manual trigger from GitHub Actions tab
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Checkout repository code
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # 2. Set up Java Environment (needed for Android Gradle builds)
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      # 3. Set up Flutter SDK
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.22.2' # Matches your local version exactly
+          channel: 'stable'
+          cache: true
+
+      # 4. Get dependencies for Flutter app
+      - name: Get Dependencies
+        run: flutter pub get
+        working-directory: mobile_app
+
+      # 5. Build Release APK
+      - name: Build Release APK
+        run: flutter build apk --release
+        working-directory: mobile_app
+
+      # 6. Upload the compiled APK as a download artifact
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-apk
+          path: mobile_app/build/app/outputs/flutter-apk/app-release.apk
