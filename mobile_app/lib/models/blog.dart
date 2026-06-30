@@ -1,3 +1,4 @@
+import 'dart:convert';
 import '../services/api_service.dart';
 
 class Blog {
@@ -33,7 +34,25 @@ class Blog {
     List<String> parsedTags = [];
     if (json['tags'] != null) {
       if (json['tags'] is List) {
+        // Already a proper list
         parsedTags = List<String>.from(json['tags'].map((x) => x.toString()));
+      } else if (json['tags'] is String) {
+        final s = json['tags'] as String;
+        if (s.trim().startsWith('[')) {
+          // JSON-encoded string like '["Hackathon","Flutter"]'
+          try {
+            final decoded = jsonDecode(s);
+            if (decoded is List) {
+              parsedTags = List<String>.from(decoded.map((x) => x.toString()));
+            }
+          } catch (_) {
+            // Comma-separated fallback
+            parsedTags = s.split(',').map((t) => t.trim()).where((t) => t.isNotEmpty).toList();
+          }
+        } else if (s.isNotEmpty) {
+          // Plain comma-separated
+          parsedTags = s.split(',').map((t) => t.trim()).where((t) => t.isNotEmpty).toList();
+        }
       }
     }
 
