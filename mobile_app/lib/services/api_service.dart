@@ -175,4 +175,47 @@ class ApiService {
       }
     }
   }
+
+  // ── Send message to chatbot ──
+  Future<String> sendChatMessage({
+    required String message,
+    required List<Map<String, String>> history,
+  }) async {
+    final primaryUri = Uri.parse('$baseUrl/chat');
+    final backupUri = Uri.parse('$fallbackUrl/chat');
+    final Map<String, String> headers = {'Content-Type': 'application/json'};
+    final String body = jsonEncode({
+      'message': message,
+      'history': history,
+    });
+
+    Future<String> postToUri(Uri uri) async {
+      final response = await http.post(uri, headers: headers, body: body).timeout(const Duration(seconds: 12));
+      final jsonResponse = jsonDecode(response.body);
+      if (jsonResponse['success'] == true && jsonResponse['data'] != null) {
+        return jsonResponse['data']['reply'] ?? '';
+      }
+      throw Exception(jsonResponse['message'] ?? 'Failed to get bot reply');
+    }
+
+    try {
+      if (kDebugMode) {
+        print('API Chat request to: $primaryUri');
+      }
+      return await postToUri(primaryUri);
+    } catch (e) {
+      if (kDebugMode) {
+        print('Primary chat failed: $e. Trying fallback: $backupUri');
+      }
+      try {
+        return await postToUri(backupUri);
+      } catch (fallbackError) {
+        if (kDebugMode) {
+          print('Fallback chat failed: $fallbackError');
+        }
+        rethrow;
+      }
+    }
+  }
 }
+

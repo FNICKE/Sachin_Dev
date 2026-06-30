@@ -7,6 +7,7 @@ import 'about_screen.dart';
 import 'projects_screen.dart';
 import 'blogs_screen.dart';
 import 'contact_screen.dart';
+import 'chatbot_screen.dart';
 
 class NavigationWrapper extends StatefulWidget {
   const NavigationWrapper({super.key});
@@ -70,9 +71,51 @@ class _NavigationWrapperState extends State<NavigationWrapper> {
       backgroundColor: const Color(0xFF13131B),
       extendBody: true,
       body: _buildBody(provider),
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 82), // Sits neatly above the floating bottom nav bar
+        child: Container(
+          width: 56,
+          height: 56,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: const LinearGradient(
+              colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF6366F1).withOpacity(0.4),
+                blurRadius: 16,
+                offset: const Offset(0, 6),
+              ),
+            ],
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              customBorder: const CircleBorder(),
+              onTap: () {
+                HapticFeedback.lightImpact();
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const ChatbotScreen()),
+                );
+              },
+              child: const Icon(
+                Icons.chat_bubble_outline_rounded,
+                color: Colors.white,
+                size: 24,
+              ),
+            ),
+          ),
+        ),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       bottomNavigationBar: _buildNavBar(),
     );
   }
+
 
   Widget _buildNavBar() {
     return Container(
