@@ -157,60 +157,116 @@ class AboutScreen extends StatelessWidget {
 
                       // Image / Avatar Container
                       Center(
-                        child: Container(
-                          width: double.infinity,
-                          height: 320,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(32),
-                            border: Border.all(color: Colors.white.withOpacity(0.08)),
-                            color: const Color(0xFF1F1F27).withOpacity(0.6),
-                          ),
-                          padding: const EdgeInsets.all(12),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(24),
-                            child: Stack(
-                              fit: StackFit.expand,
-                              children: [
-                                Image.asset(
-                                  'assets/images/profile.png',
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (context, error, stackTrace) => Container(
-                                    color: const Color(0xFF13131B),
-                                    child: const Center(
-                                      child: Icon(Icons.person_rounded, size: 64, color: Color(0xFFC0C1FF)),
-                                    ),
+                        child: Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            // Outer glow ring
+                            Container(
+                              width: double.infinity,
+                              height: 380,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(32),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: const Color(0xFF6366F1).withOpacity(0.25),
+                                    blurRadius: 50,
+                                    spreadRadius: 5,
                                   ),
-                                ),
-                                Positioned(
-                                  bottom: 16,
-                                  right: 16,
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFF1F1F27).withOpacity(0.8),
-                                      borderRadius: BorderRadius.circular(16),
-                                      border: Border.all(color: Colors.white.withOpacity(0.12)),
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        const Icon(Icons.code_rounded, size: 16, color: Color(0xFFC0C1FF)),
-                                        const SizedBox(width: 8),
-                                        Text(
-                                          'Crafting 0s & 1s',
-                                          style: TextStyle(
-                                            fontFamily: 'Geist',
-                                            color: const Color(0xFFE4E1ED),
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
+                                  BoxShadow(
+                                    color: const Color(0xFFEC4899).withOpacity(0.12),
+                                    blurRadius: 40,
+                                    offset: const Offset(10, 20),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
-                          ),
+                            // Gradient border frame
+                            Container(
+                              width: double.infinity,
+                              height: 380,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(32),
+                                gradient: const LinearGradient(
+                                  colors: [
+                                    Color(0xFF6366F1),
+                                    Color(0xFF8B5CF6),
+                                    Color(0xFFEC4899),
+                                  ],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
+                              ),
+                              padding: const EdgeInsets.all(2),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(30),
+                                child: Container(
+                                  color: const Color(0xFF0A0F1E),
+                                  child: Image.asset(
+                                    'assets/images/profile.png',
+                                    fit: BoxFit.contain,
+                                    width: double.infinity,
+                                    height: 376,
+                                    errorBuilder: (context, error, stackTrace) => Container(
+                                      height: 376,
+                                      color: const Color(0xFF13131B),
+                                      child: Column(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Container(
+                                            width: 100, height: 100,
+                                            decoration: const BoxDecoration(
+                                              shape: BoxShape.circle,
+                                              gradient: LinearGradient(
+                                                colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
+                                              ),
+                                            ),
+                                            child: const Center(
+                                              child: Text('SR',
+                                                style: TextStyle(color: Colors.white, fontSize: 36, fontWeight: FontWeight.w900)),
+                                            ),
+                                          ),
+                                          const SizedBox(height: 16),
+                                          const Text('Sachin Rathod',
+                                            style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+                                          const SizedBox(height: 6),
+                                          Text('Fullstack Developer',
+                                            style: TextStyle(color: const Color(0xFF94A3B8).withOpacity(0.7), fontSize: 14)),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            // Overlay badge bottom-right
+                            Positioned(
+                              bottom: 14,
+                              right: 14,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF0A0F1E).withOpacity(0.9),
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(color: Colors.white.withOpacity(0.12)),
+                                ),
+                                child: const Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(Icons.code_rounded, size: 14, color: Color(0xFFC0C1FF)),
+                                    SizedBox(width: 8),
+                                    Text(
+                                      'Crafting 0s & 1s',
+                                      style: TextStyle(
+                                        color: Color(0xFFE4E1ED),
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                       const SizedBox(height: 24),

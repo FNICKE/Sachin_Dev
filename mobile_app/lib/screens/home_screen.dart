@@ -552,149 +552,206 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         border: Border.all(color: kIndigo.withOpacity(0.2)),
         boxShadow: [
           BoxShadow(color: Colors.black.withOpacity(0.6), blurRadius: 40, offset: const Offset(0, 12)),
-          BoxShadow(color: kIndigo.withOpacity(0.15), blurRadius: 60, spreadRadius: -8),
+          BoxShadow(color: kIndigo.withOpacity(0.2), blurRadius: 60, spreadRadius: -8),
         ],
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(28),
-        child: Stack(
-          children: [
-            // Profile / hero image
-            SizedBox(
-              width: double.infinity,
-              height: 300,
-              child: Image.asset(
-                'assets/images/profile.png',
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => Container(
-                  height: 300,
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [const Color(0xFF0A0F1E), kSurface],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+          child: Stack(
+            children: [
+              // Subtle grid background
+              Positioned.fill(
+                child: CustomPaint(painter: _GridPainter()),
+              ),
+              // Ambient glow top-left
+              Positioned(
+                top: -40, left: -40,
+                child: Container(
+                  width: 200, height: 200,
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [kSurface, const Color(0xFF0A0F1E)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
+                    shape: BoxShape.circle,
+                    gradient: RadialGradient(
+                      colors: [kIndigo.withOpacity(0.18), Colors.transparent],
                     ),
                   ),
-                  child: Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
+                ),
+              ),
+              // Ambient glow bottom-right
+              Positioned(
+                bottom: -40, right: -40,
+                child: Container(
+                  width: 180, height: 180,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: RadialGradient(
+                      colors: [kPink.withOpacity(0.12), Colors.transparent],
+                    ),
+                  ),
+                ),
+              ),
+
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Top floating badges row
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Container(
-                          width: 80, height: 80,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            gradient: const LinearGradient(colors: [kIndigo, kPurple]),
-                            boxShadow: [BoxShadow(color: kIndigo.withOpacity(0.5), blurRadius: 30, spreadRadius: 5)],
-                          ),
-                          child: const Center(
-                            child: Text('SR', style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.w900)),
-                          ),
+                        _FloatingBadge(
+                          icon: Icons.terminal_rounded,
+                          label: 'sachin@dev ▌',
+                          iconColor: const Color(0xFF818CF8),
+                          textColor: const Color(0xFF818CF8),
+                          bgColor: kIndigo.withOpacity(0.1),
+                          borderColor: kIndigo.withOpacity(0.3),
                         ),
-                        const SizedBox(height: 16),
-                        Text('Sachin Rathod', style: TextStyle(color: Colors.white.withOpacity(0.9), fontSize: 18, fontWeight: FontWeight.bold)),
-                        Text('Fullstack Developer', style: TextStyle(color: kText.withOpacity(0.6), fontSize: 13)),
+                        _FloatingBadge(
+                          icon: Icons.layers_rounded,
+                          label: 'Fullstack',
+                          iconColor: const Color(0xFFF9A8D4),
+                          textColor: const Color(0xFFF9A8D4),
+                          bgColor: kPink.withOpacity(0.1),
+                          borderColor: kPink.withOpacity(0.3),
+                        ),
                       ],
                     ),
-                  ),
-                ),
-              ),
-            ),
+                    const SizedBox(height: 20),
 
-            // Dark gradient overlay bottom
-            Positioned(
-              bottom: 0, left: 0, right: 0,
-              child: Container(
-                height: 180,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.bottomCenter, end: Alignment.topCenter,
-                    colors: [const Color(0xFF020817).withOpacity(0.95), Colors.transparent],
-                  ),
-                ),
-              ),
-            ),
-
-            // Top-left: terminal badge
-            Positioned(
-              top: 14, left: 14,
-              child: _FloatingBadge(
-                icon: Icons.terminal_rounded,
-                label: 'sachin@dev ▌',
-                iconColor: const Color(0xFF818CF8),
-                textColor: const Color(0xFF818CF8),
-                bgColor: const Color(0xFF0A0F1E).withOpacity(0.9),
-                borderColor: kIndigo.withOpacity(0.35),
-              ),
-            ),
-
-            // Top-right: fullstack badge
-            Positioned(
-              top: 14, right: 14,
-              child: _FloatingBadge(
-                icon: Icons.layers_rounded,
-                label: 'Fullstack',
-                iconColor: const Color(0xFFF9A8D4),
-                textColor: const Color(0xFFF9A8D4),
-                bgColor: kPink.withOpacity(0.15),
-                borderColor: kPink.withOpacity(0.35),
-              ),
-            ),
-
-            // Bottom: code snippet card
-            Positioned(
-              bottom: 0, left: 0, right: 0,
-              child: Container(
-                padding: const EdgeInsets.all(16),
-                child: Container(
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF020817).withOpacity(0.92),
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: Colors.white.withOpacity(0.08)),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // macOS window dots + filename
-                      Row(
+                    // macOS Terminal window
+                    Container(
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.7),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Colors.white.withOpacity(0.07)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _WindowDot(const Color(0xFFFF5F57)),
-                          const SizedBox(width: 5),
-                          _WindowDot(const Color(0xFFFEBC2E)),
-                          const SizedBox(width: 5),
-                          _WindowDot(const Color(0xFF28C840)),
-                          const SizedBox(width: 10),
-                          Text('app.js', style: TextStyle(color: kText.withOpacity(0.4), fontSize: 11)),
+                          // Window title bar
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                            decoration: BoxDecoration(
+                              color: kSurface.withOpacity(0.8),
+                              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                              border: Border(bottom: BorderSide(color: Colors.white.withOpacity(0.06))),
+                            ),
+                            child: Row(
+                              children: [
+                                _WindowDot(const Color(0xFFFF5F57)),
+                                const SizedBox(width: 6),
+                                _WindowDot(const Color(0xFFFEBC2E)),
+                                const SizedBox(width: 6),
+                                _WindowDot(const Color(0xFF28C840)),
+                                const SizedBox(width: 14),
+                                Text('bash — sachin.dev', style: TextStyle(color: kText.withOpacity(0.5), fontSize: 11)),
+                              ],
+                            ),
+                          ),
+                          // Terminal body
+                          Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // cat sachin.json prompt
+                                RichText(
+                                  text: TextSpan(
+                                    style: const TextStyle(fontFamily: 'monospace', fontSize: 12, height: 1.5),
+                                    children: [
+                                      TextSpan(text: '➜  ', style: TextStyle(color: const Color(0xFF4CD7F6))),
+                                      TextSpan(text: '~  ', style: TextStyle(color: const Color(0xFFC0C1FF))),
+                                      const TextSpan(text: 'cat sachin.json', style: TextStyle(color: Colors.white)),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                // JSON output
+                                RichText(
+                                  text: const TextSpan(
+                                    style: TextStyle(fontFamily: 'monospace', fontSize: 12, height: 1.6, color: Color(0xFFC7C4D7)),
+                                    children: [
+                                      TextSpan(text: '{\n'),
+                                      TextSpan(text: '  "name": ', style: TextStyle(color: Color(0xFFFFB0CD))),
+                                      TextSpan(text: '"Sachin Rathod",\n', style: TextStyle(color: Color(0xFF4CD7F6))),
+                                      TextSpan(text: '  "role": ', style: TextStyle(color: Color(0xFFFFB0CD))),
+                                      TextSpan(text: '"Fullstack Engineer",\n', style: TextStyle(color: Color(0xFF4CD7F6))),
+                                      TextSpan(text: '  "stack": ', style: TextStyle(color: Color(0xFFFFB0CD))),
+                                      TextSpan(text: '["React", "Node.js", "MySQL"],\n', style: TextStyle(color: Color(0xFF4CD7F6))),
+                                      TextSpan(text: '  "location": ', style: TextStyle(color: Color(0xFFFFB0CD))),
+                                      TextSpan(text: '"Mumbai, India"\n', style: TextStyle(color: Color(0xFF4CD7F6))),
+                                      TextSpan(text: '}'),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                // Blinking cursor
+                                Row(
+                                  children: [
+                                    Text('➜  ~  ', style: TextStyle(fontFamily: 'monospace', fontSize: 12, color: const Color(0xFF4CD7F6))),
+                                    Container(width: 8, height: 14, color: const Color(0xFFC0C1FF)),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
                         ],
                       ),
-                      const SizedBox(height: 10),
-                      // Animated code line
-                      AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 350),
-                        transitionBuilder: (child, anim) => FadeTransition(
-                          opacity: anim,
-                          child: SlideTransition(
-                            position: Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero).animate(anim),
-                            child: child,
-                          ),
-                        ),
-                        child: Text(
-                          '> ${_codeLines[_codeIdx]['text']}',
-                          key: ValueKey(_codeIdx),
-                          style: TextStyle(
-                            fontFamily: 'monospace',
-                            color: _codeLines[_codeIdx]['color'] as Color,
-                            fontSize: 13,
-                            height: 1.4,
-                          ),
-                        ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Animated cycling code line
+                    Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: kIndigo.withOpacity(0.07),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: kIndigo.withOpacity(0.15)),
                       ),
-                    ],
-                  ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.code_rounded, color: kIndigo.withOpacity(0.7), size: 14),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: AnimatedSwitcher(
+                              duration: const Duration(milliseconds: 350),
+                              transitionBuilder: (child, anim) => FadeTransition(
+                                opacity: anim,
+                                child: SlideTransition(
+                                  position: Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero).animate(anim),
+                                  child: child,
+                                ),
+                              ),
+                              child: Text(
+                                _codeLines[_codeIdx]['text'] as String,
+                                key: ValueKey(_codeIdx),
+                                style: TextStyle(
+                                  fontFamily: 'monospace',
+                                  color: _codeLines[_codeIdx]['color'] as Color,
+                                  fontSize: 12,
+                                  height: 1.4,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -1255,4 +1312,23 @@ class _LinkButton extends StatelessWidget {
       ),
     );
   }
+}
+
+// ── Subtle dot-grid background painter ───────────────────────
+class _GridPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.white.withOpacity(0.03)
+      ..strokeWidth = 1;
+    const spacing = 28.0;
+    for (double x = 0; x < size.width; x += spacing) {
+      for (double y = 0; y < size.height; y += spacing) {
+        canvas.drawCircle(Offset(x, y), 1.2, paint);
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
