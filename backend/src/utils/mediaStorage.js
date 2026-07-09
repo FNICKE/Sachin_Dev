@@ -43,7 +43,8 @@ const saveLocally = async (file, req) => {
   const filePath = path.join(uploadsDir, filename);
   await fs.writeFile(filePath, file.buffer);
 
-  return `${req.protocol}://${req.get('host')}/uploads/${filename}`;
+  // Return relative path so the frontend can prepend the correct BASE_URL
+  return `/uploads/${filename}`;
 };
 
 const storeImage = async (file, req, folder) => {

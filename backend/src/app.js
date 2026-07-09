@@ -3,6 +3,31 @@ const cors = require('cors');
 const path = require('path');
 const { errorHandler } = require('./middleware/error.middleware');
 
+// In-memory log buffer for remote debugging
+global.logBuffer = [];
+const originalConsoleLog = console.log;
+const originalConsoleError = console.error;
+
+console.log = (...args) => {
+  global.logBuffer.push({
+    type: 'log',
+    time: new Date().toISOString(),
+    text: args.map(a => typeof a === 'object' ? JSON.stringify(a) : String(a)).join(' ')
+  });
+  if (global.logBuffer.length > 500) global.logBuffer.shift();
+  originalConsoleLog.apply(console, args);
+};
+
+console.error = (...args) => {
+  global.logBuffer.push({
+    type: 'error',
+    time: new Date().toISOString(),
+    text: args.map(a => typeof a === 'object' ? JSON.stringify(a) : String(a)).join(' ')
+  });
+  if (global.logBuffer.length > 500) global.logBuffer.shift();
+  originalConsoleError.apply(console, args);
+};
+
 // Route imports
 const authRoutes = require('./routes/auth.routes');
 const projectRoutes = require('./routes/project.routes');
@@ -11,6 +36,7 @@ const blogRoutes = require('./routes/blog.routes');
 const contactRoutes = require('./routes/contact.routes');
 const settingRoutes = require('./routes/setting.routes');
 const mediaRoutes = require('./routes/media.routes');
+const chatbotRoutes = require('./routes/chatbot.routes');
 const pool = require('./config/database');
 
 const app = express();
@@ -29,6 +55,7 @@ app.use('/api/blogs', blogRoutes);
 app.use('/api/contacts', contactRoutes);
 app.use('/api/settings', settingRoutes);
 app.use('/api/media', mediaRoutes);
+app.use('/api/chat', chatbotRoutes);
 
 // Health check
 app.get('/', (req, res) => {

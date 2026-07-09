@@ -184,7 +184,8 @@ const ProjectForm = ({ id }) => {
       }
       router.push('/admin/projects');
     } catch (err) {
-      alert('Save failed');
+      const errorMsg = err?.response?.data?.message || err?.message || 'Save failed';
+      alert(`Save failed: ${errorMsg}`);
     } finally {
       setLoading(false);
     }

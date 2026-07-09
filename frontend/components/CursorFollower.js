@@ -138,7 +138,10 @@ export default function CursorFollower() {
               scale:  clicking ? 0.82 : hovering ? 1.18 : 1,
               rotate: clicking ? [-4, 4, -4, 0] : 0,
             }}
-            transition={{ duration: 0.28, type: 'spring', damping: 14, stiffness: 300 }}
+            transition={{
+              scale: { type: 'spring', damping: 14, stiffness: 300, duration: 0.28 },
+              rotate: { type: 'tween', ease: 'easeInOut', duration: 0.28 }
+            }}
             style={{ perspective: '20rem', transformStyle: 'preserve-3d' }}
           >
             <motion.div

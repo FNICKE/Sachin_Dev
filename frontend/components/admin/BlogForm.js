@@ -13,7 +13,9 @@ import {
   Eye,
   Clock as ClockIcon,
   AlertCircle,
-  CheckCircle2
+  CheckCircle2,
+  FolderOpen,
+  RefreshCcw
 } from 'lucide-react';
 
 const BlogForm = ({ id }) => {
@@ -34,6 +36,10 @@ const BlogForm = ({ id }) => {
   });
   const [newTag, setNewTag] = useState('');
   const [coverFile, setCoverFile] = useState(null);
+  const [mediaOpen, setMediaOpen] = useState(false);
+  const [mediaLoading, setMediaLoading] = useState(false);
+  const [mediaImages, setMediaImages] = useState([]);
+  const [mediaError, setMediaError] = useState('');
 
   useEffect(() => {
     if (id) fetchBlog();
@@ -58,6 +64,37 @@ const BlogForm = ({ id }) => {
     } finally {
       setFetching(false);
     }
+  };
+
+  const fetchMediaImages = async () => {
+    setMediaLoading(true);
+    setMediaError('');
+    try {
+      const { data } = await api.get('/media/uploads');
+      setMediaImages(Array.isArray(data.data) ? data.data : []);
+    } catch (err) {
+      console.error(err);
+      setMediaImages([]);
+      const status = err?.response?.status;
+      setMediaError(
+        status === 404
+          ? 'Media route was not found on the backend. Start the updated local backend or redeploy the Render backend.'
+          : err?.response?.data?.message || 'Failed to load uploaded images.'
+      );
+    } finally {
+      setMediaLoading(false);
+    }
+  };
+
+  const openMediaLibrary = () => {
+    setMediaOpen(true);
+    fetchMediaImages();
+  };
+
+  const selectMediaImage = (image) => {
+    setCoverFile(null);
+    setFormData(prev => ({ ...prev, cover_url: image.url }));
+    setMediaOpen(false);
   };
 
   const handleChange = (e) => {
@@ -255,7 +292,11 @@ const BlogForm = ({ id }) => {
               <input
                 type="file"
                 accept="image/*"
-                onChange={(e) => setCoverFile(e.target.files[0])}
+                onChange={(e) => {
+                  if (e.target.files[0]) {
+                    setCoverFile(e.target.files[0]);
+                  }
+                }}
                 className="absolute inset-0 opacity-0 cursor-pointer z-20"
               />
               {coverFile || formData.cover_url ? (
@@ -270,6 +311,17 @@ const BlogForm = ({ id }) => {
                   <span className="text-[10px] font-black uppercase tracking-widest">Select Cover</span>
                 </div>
               )}
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <Button type="button" variant="outline" onClick={openMediaLibrary} className="bg-white/5 border-white/10 text-white/60 hover:text-white rounded-lg py-2 font-black uppercase tracking-widest text-[9px] flex items-center justify-center gap-1.5">
+                <FolderOpen size={12} /> Uploads Folder
+              </Button>
+              <Button type="button" variant="outline" onClick={() => {
+                setCoverFile(null);
+                setFormData(prev => ({ ...prev, cover_url: '' }));
+              }} className="bg-white/5 border-white/10 text-white/40 hover:text-red-400 rounded-lg py-2 font-black uppercase tracking-widest text-[9px]">
+                Clear Image
+              </Button>
             </div>
           </Card>
 
@@ -363,6 +415,67 @@ const BlogForm = ({ id }) => {
           </button>
         </div>
       </form>
+
+      {mediaOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/70 backdrop-blur-xl">
+          <div className="w-full max-w-2xl max-h-[75vh] overflow-hidden rounded-2xl border border-white/10 bg-[#050b18] shadow-2xl">
+            <div className="flex items-center justify-between gap-4 p-4 border-b border-white/10">
+              <div>
+                <h2 className="text-base font-black text-white tracking-tight">Uploads Folder</h2>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-white/30 mt-0.5">
+                  {mediaImages.length} stored image{mediaImages.length === 1 ? '' : 's'} found
+                </p>
+              </div>
+              <div className="flex items-center gap-2.5">
+                <Button type="button" variant="outline" onClick={fetchMediaImages} disabled={mediaLoading} className="bg-white/5 border-white/10 text-white/50 hover:text-white rounded-lg px-2.5 py-2">
+                  {mediaLoading ? <Loader2 size={14} className="animate-spin" /> : <RefreshCcw size={14} />}
+                </Button>
+                <Button type="button" variant="outline" onClick={() => setMediaOpen(false)} className="bg-white/5 border-white/10 text-white/50 hover:text-white rounded-lg px-2.5 py-2">
+                  <X size={14} />
+                </Button>
+              </div>
+            </div>
+
+            <div className="p-4 overflow-y-auto max-h-[calc(75vh-64px)]">
+              {mediaLoading ? (
+                <div className="py-16 text-center text-white/30 font-black uppercase tracking-widest animate-pulse text-xs">
+                  Loading stored images...
+                </div>
+              ) : mediaError ? (
+                <div className="py-16 text-center max-w-md mx-auto">
+                  <ImageIcon size={32} className="mx-auto mb-3 text-red-400/30" />
+                  <p className="text-red-300 font-black uppercase tracking-widest text-xs">Unable to load uploads</p>
+                  <p className="text-white/35 text-xs font-medium mt-2 leading-relaxed">{mediaError}</p>
+                </div>
+              ) : mediaImages.length === 0 ? (
+                <div className="py-16 text-center">
+                  <ImageIcon size={32} className="mx-auto mb-3 text-white/10" />
+                  <p className="text-white/30 font-black uppercase tracking-widest text-xs">No uploaded images found</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  {mediaImages.map((image) => (
+                    <button
+                      type="button"
+                      key={image.name}
+                      onClick={() => selectMediaImage(image)}
+                      className="group text-left rounded-xl overflow-hidden border border-white/10 bg-white/5 hover:border-primary/70 hover:bg-primary/10 transition-all"
+                    >
+                      <div className="aspect-video bg-black/30 overflow-hidden">
+                        <img src={image.url} alt={image.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                      </div>
+                      <div className="p-2">
+                        <p className="text-[9px] font-black uppercase tracking-widest text-white/60 truncate">{image.name}</p>
+                        <p className="text-[8px] font-bold text-white/25 mt-0.5">{Math.round(image.size / 1024)} KB</p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
