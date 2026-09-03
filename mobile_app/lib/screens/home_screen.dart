@@ -1,13 +1,15 @@
 import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../providers/portfolio_provider.dart';
 import '../models/project.dart';
 import 'project_detail_screen.dart';
 
-// ── Color constants matching website palette ─────────────────
+// ── Design tokens ─────────────────────────────────────────────
 const Color kIndigo = Color(0xFF6366F1);
 const Color kPurple = Color(0xFF8B5CF6);
 const Color kPink = Color(0xFFEC4899);
@@ -25,7 +27,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
-  // ── Typewriter ──────────────────────────────────────────────
+  // ── Typewriter ─────────────────────────────────────────────
   final List<String> _phrases = const [
     'Web Applications',
     'REST APIs & Backends',
@@ -38,7 +40,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   String _typeText = '';
   Timer? _typeTimer;
 
-  // ── Code line carousel ──────────────────────────────────────
+  // ── Code carousel ─────────────────────────────────────────
   final List<Map<String, dynamic>> _codeLines = const [
     {'text': "const dev = new Sachin();", 'color': Color(0xFFC792EA)},
     {'text': "dev.skills = ['React','Node','MySQL'];", 'color': Color(0xFF82AAFF)},
@@ -48,7 +50,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   int _codeIdx = 0;
   Timer? _codeTimer;
 
-  // ── Background blob phase ───────────────────────────────────
+  // ── Background blob phase ──────────────────────────────────
   final List<List<Color>> _bgPhases = const [
     [Color(0x386366F1), Color(0x26EC4899), Color(0x1A06B6D4)],
     [Color(0x388B5CF6), Color(0x1FF59B0B), Color(0x1A6366F1)],
@@ -58,40 +60,42 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   int _bgPhase = 0;
   Timer? _bgTimer;
 
-  // ── Particle dots ───────────────────────────────────────────
+  // ── Particle dots ──────────────────────────────────────────
   final List<_Particle> _particles = [];
   final Random _rng = Random();
 
-  // ── Pulse animation for green dot ──────────────────────────
+  // ── Pulse for green dot ───────────────────────────────────
   late AnimationController _pulseCtrl;
   late Animation<double> _pulseAnim;
 
-  // ── Blob animation controllers ─────────────────────────────
-  late AnimationController _blob1Ctrl;
-  late AnimationController _blob2Ctrl;
-  late AnimationController _blob3Ctrl;
+  // ── Blob controllers ──────────────────────────────────────
+  late AnimationController _blob1Ctrl, _blob2Ctrl, _blob3Ctrl;
+
+  // ── Counter animation controller ──────────────────────────
+  late AnimationController _counterCtrl;
+  late Animation<double> _counterAnim;
 
   @override
   void initState() {
     super.initState();
 
-    // Pulse
     _pulseCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 1200))
       ..repeat(reverse: true);
     _pulseAnim = Tween<double>(begin: 0.4, end: 1.0).animate(
       CurvedAnimation(parent: _pulseCtrl, curve: Curves.easeInOut),
     );
 
-    // Blob controllers
-    _blob1Ctrl = AnimationController(vsync: this, duration: const Duration(seconds: 14))
-      ..repeat(reverse: true);
-    _blob2Ctrl = AnimationController(vsync: this, duration: const Duration(seconds: 18))
-      ..repeat(reverse: true);
-    _blob3Ctrl = AnimationController(vsync: this, duration: const Duration(seconds: 11))
-      ..repeat(reverse: true);
+    _blob1Ctrl = AnimationController(vsync: this, duration: const Duration(seconds: 14))..repeat(reverse: true);
+    _blob2Ctrl = AnimationController(vsync: this, duration: const Duration(seconds: 18))..repeat(reverse: true);
+    _blob3Ctrl = AnimationController(vsync: this, duration: const Duration(seconds: 11))..repeat(reverse: true);
 
-    // Particles
-    for (int i = 0; i < 35; i++) {
+    _counterCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 1800));
+    _counterAnim = CurvedAnimation(parent: _counterCtrl, curve: Curves.easeOutCubic);
+    Future.delayed(const Duration(milliseconds: 600), () {
+      if (mounted) _counterCtrl.forward();
+    });
+
+    for (int i = 0; i < 40; i++) {
       _particles.add(_Particle(
         x: _rng.nextDouble(),
         y: _rng.nextDouble(),
@@ -102,22 +106,17 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       ));
     }
 
-    // Timers
     _bgTimer = Timer.periodic(const Duration(seconds: 5), (_) {
       if (mounted) setState(() => _bgPhase = (_bgPhase + 1) % _bgPhases.length);
     });
-
     _codeTimer = Timer.periodic(const Duration(milliseconds: 2200), (_) {
       if (mounted) setState(() => _codeIdx = (_codeIdx + 1) % _codeLines.length);
     });
-
     _startTypewriter();
   }
 
   void _startTypewriter() {
-    _typeTimer = Timer.periodic(const Duration(milliseconds: 90), (_) {
-      _tickTypewriter();
-    });
+    _typeTimer = Timer.periodic(const Duration(milliseconds: 90), (_) => _tickTypewriter());
   }
 
   void _tickTypewriter() {
@@ -132,9 +131,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           _deleting = true;
           _typeTimer?.cancel();
           Future.delayed(const Duration(milliseconds: 1800), () {
-            if (mounted) {
-              _typeTimer = Timer.periodic(const Duration(milliseconds: 55), (_) => _tickTypewriter());
-            }
+            if (mounted) _typeTimer = Timer.periodic(const Duration(milliseconds: 55), (_) => _tickTypewriter());
           });
         }
       } else {
@@ -146,9 +143,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           _phraseIdx = (_phraseIdx + 1) % _phrases.length;
           _typeTimer?.cancel();
           Future.delayed(const Duration(milliseconds: 350), () {
-            if (mounted) {
-              _typeTimer = Timer.periodic(const Duration(milliseconds: 90), (_) => _tickTypewriter());
-            }
+            if (mounted) _typeTimer = Timer.periodic(const Duration(milliseconds: 90), (_) => _tickTypewriter());
           });
         }
       }
@@ -164,6 +159,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     _blob1Ctrl.dispose();
     _blob2Ctrl.dispose();
     _blob3Ctrl.dispose();
+    _counterCtrl.dispose();
     super.dispose();
   }
 
@@ -187,32 +183,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       backgroundColor: kBg,
       body: Stack(
         children: [
-          // ── Animated morphing background blobs ──────────────
-          _AnimatedBlob(
-            controller: _blob1Ctrl,
-            color: phase[0],
-            alignment: const Alignment(-1.2, -1.2),
-            size: 400,
-          ),
-          _AnimatedBlob(
-            controller: _blob2Ctrl,
-            color: phase[1],
-            alignment: const Alignment(1.2, 0.8),
-            size: 380,
-          ),
-          _AnimatedBlob(
-            controller: _blob3Ctrl,
-            color: phase[2],
-            alignment: const Alignment(0.0, 0.2),
-            size: 280,
-          ),
+          // ── Animated morphing blobs ────────────────────────
+          _AnimatedBlob(controller: _blob1Ctrl, color: phase[0], alignment: const Alignment(-1.2, -1.2), size: 420),
+          _AnimatedBlob(controller: _blob2Ctrl, color: phase[1], alignment: const Alignment(1.2, 0.8), size: 390),
+          _AnimatedBlob(controller: _blob3Ctrl, color: phase[2], alignment: const Alignment(0.0, 0.2), size: 290),
 
-          // ── Particle dots overlay ──────────────────────────
+          // ── Particle overlay ───────────────────────────────
           Positioned.fill(
             child: IgnorePointer(
-              child: CustomPaint(
-                painter: _ParticlePainter(_particles),
-              ),
+              child: CustomPaint(painter: _ParticlePainter(_particles)),
             ),
           ),
 
@@ -220,57 +199,39 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           CustomScrollView(
             physics: const BouncingScrollPhysics(),
             slivers: [
-              // App bar
               SliverToBoxAdapter(child: _buildAppBar(provider)),
 
-              // ── HERO SECTION ─────────────────────────────────
+              // ── HERO SECTION ───────────────────────────────
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Availability pill
                       Center(child: _buildAvailabilityPill()),
                       const SizedBox(height: 28),
-
-                      // Headline
                       _buildHeadline(),
                       const SizedBox(height: 20),
-
-                      // Sub-text
                       RichText(
                         text: TextSpan(
-                          style: TextStyle(
-                            fontSize: 15,
-                            color: kText.withOpacity(0.85),
-                            height: 1.65,
-                          ),
-                          children: const [
-                            TextSpan(text: 'Fullstack developer specializing in '),
+                          style: GoogleFonts.inter(fontSize: 15, color: kText.withOpacity(0.85), height: 1.65),
+                          children: [
+                            const TextSpan(text: 'Fullstack developer specializing in '),
                             TextSpan(
                               text: 'React, Node.js & MySQL',
-                              style: TextStyle(color: Color(0xFFA5B4FC), fontWeight: FontWeight.bold),
+                              style: GoogleFonts.inter(color: const Color(0xFFA5B4FC), fontWeight: FontWeight.bold),
                             ),
-                            TextSpan(text: '. I turn complex ideas into seamless, production-grade experiences.'),
+                            const TextSpan(text: '. I turn complex ideas into seamless, production-grade experiences.'),
                           ],
                         ),
                       ),
                       const SizedBox(height: 28),
-
-                      // CTA buttons
                       _buildCtaButtons(provider),
                       const SizedBox(height: 28),
-
-                      // Social links
                       _buildSocialLinks(),
                       const SizedBox(height: 32),
-
-                      // Hero image card (matches website's visual card)
                       _buildHeroVisualCard(),
                       const SizedBox(height: 32),
-
-                      // Stats strip (matches website's stats section)
                       _buildStatsStrip(),
                       const SizedBox(height: 40),
                     ],
@@ -278,7 +239,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 ),
               ),
 
-              // ── FEATURED PROJECTS ─────────────────────────────
+              // ── FEATURED PROJECTS ──────────────────────────
               SliverToBoxAdapter(
                 child: Container(
                   decoration: BoxDecoration(
@@ -295,7 +256,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         const SizedBox(height: 8),
                         Text(
                           'Hand-picked builds that showcase my range — from fullstack apps to pixel-perfect UIs.',
-                          style: TextStyle(fontSize: 14, color: kText.withOpacity(0.7), height: 1.6),
+                          style: GoogleFonts.inter(fontSize: 14, color: kText.withOpacity(0.7), height: 1.6),
                         ),
                         const SizedBox(height: 24),
                       ],
@@ -304,10 +265,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 ),
               ),
 
-              // Projects list
               _buildFeaturedProjectsList(provider),
 
-              // View All button
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(20, 16, 20, 40),
@@ -315,7 +274,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 ),
               ),
 
-              // ── SKILLS SECTION ─────────────────────────────────
+              // ── SKILLS SECTION ─────────────────────────────
               SliverToBoxAdapter(
                 child: Container(
                   decoration: BoxDecoration(
@@ -332,7 +291,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         Text(
                           'A broad toolkit to build, ship, and scale production-grade software.',
                           textAlign: TextAlign.center,
-                          style: TextStyle(fontSize: 14, color: kText.withOpacity(0.7), height: 1.6),
+                          style: GoogleFonts.inter(fontSize: 14, color: kText.withOpacity(0.7), height: 1.6),
                         ),
                       ],
                     ),
@@ -342,7 +301,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
               _buildSkillsGrid(provider),
 
-              // ── CTA BANNER (matches website's "Have a project in mind?") ──
+              // ── CTA BANNER ─────────────────────────────────
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(20, 40, 20, 100),
@@ -356,7 +315,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-  // ── WIDGETS ─────────────────────────────────────────────────
+  // ── WIDGETS ───────────────────────────────────────────────
 
   Widget _buildAppBar(PortfolioProvider provider) {
     return SafeArea(
@@ -365,48 +324,58 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         padding: const EdgeInsets.fromLTRB(20, 12, 16, 0),
         child: Row(
           children: [
-            // Logo
+            // Logo with glow
             Container(
-              width: 34,
-              height: 34,
+              width: 38,
+              height: 38,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: const LinearGradient(colors: [kIndigo, kPurple]),
-                boxShadow: [BoxShadow(color: kIndigo.withOpacity(0.4), blurRadius: 12, spreadRadius: 2)],
+                boxShadow: [BoxShadow(color: kIndigo.withOpacity(0.5), blurRadius: 16, spreadRadius: 2)],
               ),
-              child: const Center(
-                child: Text('SR', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w900)),
+              child: Center(
+                child: Text('SR',
+                    style: GoogleFonts.inter(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w900)),
               ),
             ),
             const SizedBox(width: 10),
-            Text('sachin.dev',
-                style: TextStyle(color: kText.withOpacity(0.8), fontSize: 14, fontWeight: FontWeight.w600, letterSpacing: 0.5)),
+            ShaderMask(
+              shaderCallback: (b) => const LinearGradient(
+                colors: [Colors.white, Color(0xFFA5B4FC)],
+              ).createShader(b),
+              child: Text('sachin.dev',
+                  style: GoogleFonts.inter(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w700, letterSpacing: 0.3)),
+            ),
             const Spacer(),
             GestureDetector(
               onTap: () => provider.refreshData(),
               child: Container(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.all(9),
                 decoration: BoxDecoration(
-                  color: kSurface,
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: kCard),
+                  color: Colors.white.withOpacity(0.05),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.white.withOpacity(0.08)),
                 ),
-                child: Icon(Icons.refresh_rounded, color: kText.withOpacity(0.6), size: 18),
+                child: Icon(Icons.refresh_rounded, color: kText.withOpacity(0.7), size: 18),
               ),
             ),
           ],
         ),
       ),
-    );
+    )
+        .animate()
+        .fadeIn(duration: 600.ms)
+        .slideY(begin: -0.3, curve: Curves.easeOutCubic);
   }
 
   Widget _buildAvailabilityPill() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
       decoration: BoxDecoration(
-        color: kGreen.withOpacity(0.06),
-        border: Border.all(color: kGreen.withOpacity(0.28)),
+        color: kGreen.withOpacity(0.07),
+        border: Border.all(color: kGreen.withOpacity(0.3)),
         borderRadius: BorderRadius.circular(30),
+        boxShadow: [BoxShadow(color: kGreen.withOpacity(0.12), blurRadius: 20, spreadRadius: 2)],
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -422,53 +391,51 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             ),
           ),
           const SizedBox(width: 8),
-          const Text(
+          Text(
             'AVAILABLE FOR FREELANCE & FULLTIME',
-            style: TextStyle(color: Color(0xFF4ADE80), fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 1.0),
+            style: GoogleFonts.inter(color: const Color(0xFF4ADE80), fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 1.0),
           ),
         ],
       ),
-    );
+    ).animate(delay: 200.ms).fadeIn(duration: 500.ms).scale(begin: const Offset(0.9, 0.9), curve: Curves.easeOutBack);
   }
 
   Widget _buildHeadline() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        RichText(
-          text: const TextSpan(
-            style: TextStyle(fontSize: 36, fontWeight: FontWeight.w900, color: Colors.white, letterSpacing: -0.8, height: 1.1),
-            children: [
-              TextSpan(text: 'Hi, I build '),
-              // Gradient "stunning" word
-            ],
-          ),
+        Text(
+          'Hi, I build',
+          style: GoogleFonts.inter(fontSize: 38, fontWeight: FontWeight.w900, color: Colors.white, letterSpacing: -1.0, height: 1.1),
         ),
-        // "stunning" with gradient shimmer
         ShaderMask(
           shaderCallback: (bounds) => const LinearGradient(
             colors: [Color(0xFF818CF8), Color(0xFFC084FC), Color(0xFFEC4899), Color(0xFF06B6D4)],
             stops: [0.0, 0.35, 0.65, 1.0],
           ).createShader(bounds),
-          child: const Text(
+          child: Text(
             'stunning',
-            style: TextStyle(fontSize: 36, fontWeight: FontWeight.w900, color: Colors.white, letterSpacing: -0.8, height: 1.1),
+            style: GoogleFonts.inter(fontSize: 38, fontWeight: FontWeight.w900, color: Colors.white, letterSpacing: -1.0, height: 1.1),
           ),
         ),
         const SizedBox(height: 6),
-        // Typewriter line
         Row(
           children: [
             Flexible(
               child: Text(
                 '$_typeText|',
-                style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w900, color: Colors.white, letterSpacing: -0.5, height: 1.2),
+                style: GoogleFonts.inter(
+                    fontSize: 28,
+                    fontWeight: FontWeight.w900,
+                    color: Colors.white,
+                    letterSpacing: -0.5,
+                    height: 1.2),
               ),
             ),
           ],
         ),
       ],
-    );
+    ).animate(delay: 300.ms).fadeIn(duration: 600.ms).slideY(begin: 0.2, curve: Curves.easeOutCubic);
   }
 
   Widget _buildCtaButtons(PortfolioProvider provider) {
@@ -481,17 +448,20 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               padding: const EdgeInsets.symmetric(vertical: 15),
               decoration: BoxDecoration(
                 gradient: const LinearGradient(colors: [kIndigo, kPurple, kPink]),
-                borderRadius: BorderRadius.circular(14),
-                boxShadow: [BoxShadow(color: kIndigo.withOpacity(0.45), blurRadius: 20, offset: const Offset(0, 8))],
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(color: kIndigo.withOpacity(0.5), blurRadius: 24, offset: const Offset(0, 8)),
+                  BoxShadow(color: kPink.withOpacity(0.2), blurRadius: 40, offset: const Offset(0, 4)),
+                ],
               ),
-              child: const Row(
+              child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.auto_awesome_rounded, color: Color(0xFFFBBF24), size: 17),
-                  SizedBox(width: 8),
-                  Text('View My Work', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
-                  SizedBox(width: 6),
-                  Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 16),
+                  const Icon(Icons.auto_awesome_rounded, color: Color(0xFFFBBF24), size: 17),
+                  const SizedBox(width: 8),
+                  Text('View My Work', style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 14)),
+                  const SizedBox(width: 6),
+                  const Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 16),
                 ],
               ),
             ),
@@ -507,22 +477,22 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               padding: const EdgeInsets.symmetric(vertical: 15),
               decoration: BoxDecoration(
                 color: Colors.white.withOpacity(0.05),
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: Colors.white.withOpacity(0.15)),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.white.withOpacity(0.12)),
               ),
-              child: const Row(
+              child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.download_rounded, color: Colors.white, size: 17),
-                  SizedBox(width: 8),
-                  Text('Download Resume', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+                  const Icon(Icons.download_rounded, color: Colors.white, size: 17),
+                  const SizedBox(width: 8),
+                  Text('Download CV', style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 13)),
                 ],
               ),
             ),
           ),
         ),
       ],
-    );
+    ).animate(delay: 500.ms).fadeIn(duration: 500.ms).slideY(begin: 0.3, curve: Curves.easeOutCubic);
   }
 
   Widget _buildSocialLinks() {
@@ -541,7 +511,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           child: _SocialChip(icon: Icons.work_outline_rounded, label: 'LinkedIn', color: kText.withOpacity(0.7)),
         ),
       ],
-    );
+    ).animate(delay: 650.ms).fadeIn(duration: 500.ms);
   }
 
   Widget _buildHeroVisualCard() {
@@ -549,10 +519,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       width: double.infinity,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: kIndigo.withOpacity(0.2)),
+        border: Border.all(color: Colors.white.withOpacity(0.08)),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.6), blurRadius: 40, offset: const Offset(0, 12)),
-          BoxShadow(color: kIndigo.withOpacity(0.2), blurRadius: 60, spreadRadius: -8),
+          BoxShadow(color: Colors.black.withOpacity(0.7), blurRadius: 50, offset: const Offset(0, 16)),
+          BoxShadow(color: kIndigo.withOpacity(0.25), blurRadius: 80, spreadRadius: -10),
         ],
       ),
       child: ClipRRect(
@@ -560,40 +530,34 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         child: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [const Color(0xFF0A0F1E), kSurface],
+              colors: [const Color(0xFF090E1A), kSurface.withOpacity(0.8)],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
           ),
           child: Stack(
             children: [
-              // Subtle grid background
-              Positioned.fill(
-                child: CustomPaint(painter: _GridPainter()),
-              ),
-              // Ambient glow top-left
+              // Grid background
+              Positioned.fill(child: CustomPaint(painter: _GridPainter())),
+              // Top-left glow
               Positioned(
-                top: -40, left: -40,
+                top: -50, left: -50,
+                child: Container(
+                  width: 220, height: 220,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: RadialGradient(colors: [kIndigo.withOpacity(0.2), Colors.transparent]),
+                  ),
+                ),
+              ),
+              // Bottom-right glow
+              Positioned(
+                bottom: -50, right: -50,
                 child: Container(
                   width: 200, height: 200,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    gradient: RadialGradient(
-                      colors: [kIndigo.withOpacity(0.18), Colors.transparent],
-                    ),
-                  ),
-                ),
-              ),
-              // Ambient glow bottom-right
-              Positioned(
-                bottom: -40, right: -40,
-                child: Container(
-                  width: 180, height: 180,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: RadialGradient(
-                      colors: [kPink.withOpacity(0.12), Colors.transparent],
-                    ),
+                    gradient: RadialGradient(colors: [kPink.withOpacity(0.15), Colors.transparent]),
                   ),
                 ),
               ),
@@ -603,7 +567,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Top floating badges row
+                    // Floating badges
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -627,18 +591,19 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     ),
                     const SizedBox(height: 20),
 
-                    // macOS Terminal window
+                    // macOS terminal window
                     Container(
                       width: double.infinity,
                       decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.7),
+                        color: Colors.black.withOpacity(0.75),
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(color: Colors.white.withOpacity(0.07)),
+                        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.5), blurRadius: 20, offset: const Offset(0, 6))],
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Window title bar
+                          // Title bar
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                             decoration: BoxDecoration(
@@ -654,7 +619,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                 const SizedBox(width: 6),
                                 _WindowDot(const Color(0xFF28C840)),
                                 const SizedBox(width: 14),
-                                Text('bash — sachin.dev', style: TextStyle(color: kText.withOpacity(0.5), fontSize: 11)),
+                                Text('bash — sachin.dev',
+                                    style: GoogleFonts.firaCode(color: kText.withOpacity(0.5), fontSize: 11)),
                               ],
                             ),
                           ),
@@ -664,10 +630,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                // cat sachin.json prompt
                                 RichText(
                                   text: TextSpan(
-                                    style: const TextStyle(fontFamily: 'monospace', fontSize: 12, height: 1.5),
+                                    style: GoogleFonts.firaCode(fontSize: 12, height: 1.5),
                                     children: [
                                       TextSpan(text: '➜  ', style: TextStyle(color: const Color(0xFF4CD7F6))),
                                       TextSpan(text: '~  ', style: TextStyle(color: const Color(0xFFC0C1FF))),
@@ -676,11 +641,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                   ),
                                 ),
                                 const SizedBox(height: 8),
-                                // JSON output
                                 RichText(
-                                  text: const TextSpan(
-                                    style: TextStyle(fontFamily: 'monospace', fontSize: 12, height: 1.6, color: Color(0xFFC7C4D7)),
-                                    children: [
+                                  text: TextSpan(
+                                    style: GoogleFonts.firaCode(fontSize: 12, height: 1.6, color: const Color(0xFFC7C4D7)),
+                                    children: const [
                                       TextSpan(text: '{\n'),
                                       TextSpan(text: '  "name": ', style: TextStyle(color: Color(0xFFFFB0CD))),
                                       TextSpan(text: '"Sachin Rathod",\n', style: TextStyle(color: Color(0xFF4CD7F6))),
@@ -695,10 +659,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                   ),
                                 ),
                                 const SizedBox(height: 8),
-                                // Blinking cursor
                                 Row(
                                   children: [
-                                    Text('➜  ~  ', style: TextStyle(fontFamily: 'monospace', fontSize: 12, color: const Color(0xFF4CD7F6))),
+                                    Text('➜  ~  ',
+                                        style: GoogleFonts.firaCode(fontSize: 12, color: const Color(0xFF4CD7F6))),
                                     Container(width: 8, height: 14, color: const Color(0xFFC0C1FF)),
                                   ],
                                 ),
@@ -735,8 +699,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                               child: Text(
                                 _codeLines[_codeIdx]['text'] as String,
                                 key: ValueKey(_codeIdx),
-                                style: TextStyle(
-                                  fontFamily: 'monospace',
+                                style: GoogleFonts.firaCode(
                                   color: _codeLines[_codeIdx]['color'] as Color,
                                   fontSize: 12,
                                   height: 1.4,
@@ -754,69 +717,90 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           ),
         ),
       ),
-    );
+    )
+        .animate(delay: 700.ms)
+        .fadeIn(duration: 700.ms)
+        .slideY(begin: 0.2, curve: Curves.easeOutCubic);
   }
 
   Widget _buildStatsStrip() {
     final stats = [
-      {'value': '20+', 'label': 'Projects Built', 'icon': Icons.rocket_launch_outlined, 'color': const Color(0xFF7AA2F7)},
-      {'value': '1+', 'label': 'Yrs Exp', 'icon': Icons.bolt_outlined, 'color': const Color(0xFFBB9AF7)},
-      {'value': '15+', 'label': 'Happy Clients', 'icon': Icons.star_outline_rounded, 'color': const Color(0xFF9ECE6A)},
+      {'value': 20.0, 'label': 'Projects', 'suffix': '+', 'icon': Icons.rocket_launch_outlined, 'color': const Color(0xFF7AA2F7)},
+      {'value': 1.0, 'label': 'Yrs Exp', 'suffix': '+', 'icon': Icons.bolt_outlined, 'color': const Color(0xFFBB9AF7)},
+      {'value': 15.0, 'label': 'Clients', 'suffix': '+', 'icon': Icons.star_outline_rounded, 'color': const Color(0xFF9ECE6A)},
     ];
 
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [kSurface, const Color(0xFF0A0F1E)],
-          begin: Alignment.topLeft, end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: Colors.white.withOpacity(0.06)),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.4), blurRadius: 20, offset: const Offset(0, 8))],
-      ),
-      child: Row(
-        children: stats.asMap().entries.map((entry) {
-          final stat = entry.value;
-          final isLast = entry.key == stats.length - 1;
-          return Expanded(
-            child: Row(
-              children: [
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 8),
-                    child: Column(
-                      children: [
-                        Icon(stat['icon'] as IconData, color: stat['color'] as Color, size: 22),
-                        const SizedBox(height: 8),
-                        Text(
-                          stat['value'] as String,
-                          style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: stat['color'] as Color),
+    return AnimatedBuilder(
+      animation: _counterAnim,
+      builder: (_, __) {
+        return Container(
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.03),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: Colors.white.withOpacity(0.07)),
+            boxShadow: [
+              BoxShadow(color: Colors.black.withOpacity(0.4), blurRadius: 24, offset: const Offset(0, 8)),
+              BoxShadow(color: kIndigo.withOpacity(0.06), blurRadius: 40),
+            ],
+          ),
+          child: Row(
+            children: stats.asMap().entries.map((entry) {
+              final stat = entry.value;
+              final isLast = entry.key == stats.length - 1;
+              final targetVal = stat['value'] as double;
+              final currentVal = (targetVal * _counterAnim.value).floor();
+              return Expanded(
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 8),
+                        child: Column(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: (stat['color'] as Color).withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Icon(stat['icon'] as IconData, color: stat['color'] as Color, size: 20),
+                            ),
+                            const SizedBox(height: 10),
+                            Text(
+                              '$currentVal${stat['suffix']}',
+                              style: GoogleFonts.inter(
+                                  fontSize: 24, fontWeight: FontWeight.w900, color: stat['color'] as Color),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              (stat['label'] as String).toUpperCase(),
+                              textAlign: TextAlign.center,
+                              style: GoogleFonts.inter(
+                                  fontSize: 8, fontWeight: FontWeight.w800, color: kText.withOpacity(0.45), letterSpacing: 0.8),
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          (stat['label'] as String).toUpperCase(),
-                          textAlign: TextAlign.center,
-                          style: TextStyle(fontSize: 8, fontWeight: FontWeight.w800, color: kText.withOpacity(0.45), letterSpacing: 0.8),
-                        ),
-                      ],
+                      ),
                     ),
-                  ),
+                    if (!isLast)
+                      Container(width: 1, height: 40, color: Colors.white.withOpacity(0.06)),
+                  ],
                 ),
-                if (!isLast)
-                  Container(width: 1, height: 40, color: Colors.white.withOpacity(0.06)),
-              ],
-            ),
-          );
-        }).toList(),
-      ),
-    );
+              );
+            }).toList(),
+          ),
+        );
+      },
+    )
+        .animate(delay: 800.ms)
+        .fadeIn(duration: 600.ms)
+        .slideY(begin: 0.3, curve: Curves.easeOutCubic);
   }
 
   Widget _buildSectionLabel(IconData icon, String text) {
     return Center(
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
         decoration: BoxDecoration(
           color: kIndigo.withOpacity(0.08),
           borderRadius: BorderRadius.circular(20),
@@ -827,7 +811,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           children: [
             Icon(icon, size: 13, color: const Color(0xFF818CF8)),
             const SizedBox(width: 6),
-            Text(text, style: const TextStyle(color: Color(0xFF818CF8), fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 0.8)),
+            Text(text,
+                style: GoogleFonts.inter(
+                    color: const Color(0xFF818CF8), fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 0.8)),
           ],
         ),
       ),
@@ -839,7 +825,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       child: RichText(
         textAlign: TextAlign.center,
         text: TextSpan(
-          style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w900, letterSpacing: -0.5),
+          style: GoogleFonts.inter(fontSize: 32, fontWeight: FontWeight.w900, letterSpacing: -0.5),
           children: [
             TextSpan(text: normal, style: const TextStyle(color: Colors.white)),
             WidgetSpan(
@@ -847,7 +833,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 shaderCallback: (bounds) => const LinearGradient(
                   colors: [Color(0xFF818CF8), Color(0xFFC084FC), Color(0xFFEC4899)],
                 ).createShader(bounds),
-                child: Text(gradient, style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w900, color: Colors.white)),
+                child: Text(gradient,
+                    style: GoogleFonts.inter(
+                        fontSize: 32, fontWeight: FontWeight.w900, color: Colors.white)),
               ),
             ),
           ],
@@ -865,7 +853,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           Center(
             child: Padding(
               padding: const EdgeInsets.all(32),
-              child: Text('No projects yet', style: TextStyle(color: kText.withOpacity(0.5))),
+              child: Text('No projects yet', style: GoogleFonts.inter(color: kText.withOpacity(0.5))),
             ),
           ),
         ]),
@@ -876,7 +864,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       delegate: SliverChildBuilderDelegate(
         (context, i) => Padding(
           padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-          child: _ProjectCard(project: featured[i], onTap: () {
+          child: _ProjectCard(project: featured[i], index: i, onTap: () {
             Navigator.push(context, MaterialPageRoute(
               builder: (_) => ProjectDetailScreen(project: featured[i]),
             ));
@@ -892,16 +880,17 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       onTap: () => _launch('https://github.com/FNICKE'),
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 14),
+        padding: const EdgeInsets.symmetric(vertical: 15),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.04),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: Colors.white.withOpacity(0.12)),
+          color: Colors.white.withOpacity(0.03),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.white.withOpacity(0.1)),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text('View All Projects', style: TextStyle(color: kText.withOpacity(0.8), fontWeight: FontWeight.bold, fontSize: 14)),
+            Text('View All Projects',
+                style: GoogleFonts.inter(color: kText.withOpacity(0.8), fontWeight: FontWeight.w700, fontSize: 14)),
             const SizedBox(width: 8),
             Icon(Icons.arrow_forward_rounded, color: kText.withOpacity(0.6), size: 16),
           ],
@@ -933,18 +922,24 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           spacing: 10,
           runSpacing: 10,
           alignment: WrapAlignment.center,
-          children: hardcodedSkills.map((s) {
+          children: hardcodedSkills.asMap().entries.map((entry) {
+            final i = entry.key;
+            final s = entry.value;
             final color = s['color'] as Color;
             return Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
               decoration: BoxDecoration(
                 color: color.withOpacity(0.06),
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(color: color.withOpacity(0.25)),
+                boxShadow: [BoxShadow(color: color.withOpacity(0.08), blurRadius: 12)],
               ),
               child: Text(s['name'] as String,
-                style: TextStyle(color: color, fontSize: 13, fontWeight: FontWeight.bold)),
-            );
+                  style: GoogleFonts.inter(color: color, fontSize: 13, fontWeight: FontWeight.w700)),
+            )
+                .animate(delay: Duration(milliseconds: 50 * i))
+                .fadeIn(duration: 400.ms)
+                .scale(begin: const Offset(0.8, 0.8), curve: Curves.easeOutBack);
           }).toList(),
         ),
       ),
@@ -963,11 +958,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         ),
         borderRadius: BorderRadius.circular(28),
         border: Border.all(color: kIndigo.withOpacity(0.15)),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.5), blurRadius: 30, offset: const Offset(0, 10))],
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.5), blurRadius: 30, offset: const Offset(0, 10)),
+          BoxShadow(color: kIndigo.withOpacity(0.08), blurRadius: 60),
+        ],
       ),
       child: Stack(
         children: [
-          // Decorative glows
           Positioned(top: -40, left: -40,
             child: Container(width: 160, height: 160,
               decoration: BoxDecoration(shape: BoxShape.circle,
@@ -980,24 +977,21 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 gradient: RadialGradient(colors: [kPink.withOpacity(0.16), Colors.transparent])),
             ),
           ),
-
           Column(
             children: [
-              // Label
               _buildSectionLabel(Icons.rocket_launch_rounded, "Let's build together"),
               const SizedBox(height: 20),
-
-              // Title
               RichText(
                 textAlign: TextAlign.center,
-                text: const TextSpan(
-                  style: TextStyle(fontSize: 30, fontWeight: FontWeight.w900, letterSpacing: -0.5, height: 1.1),
+                text: TextSpan(
+                  style: GoogleFonts.inter(fontSize: 30, fontWeight: FontWeight.w900, letterSpacing: -0.5, height: 1.1),
                   children: [
-                    TextSpan(text: 'Have a project ', style: TextStyle(color: Colors.white)),
+                    const TextSpan(text: 'Have a project ', style: TextStyle(color: Colors.white)),
                     WidgetSpan(
                       child: ShaderMask(
                         shaderCallback: _gradientShader,
-                        child: Text('in mind?', style: TextStyle(fontSize: 30, fontWeight: FontWeight.w900, color: Colors.white, letterSpacing: -0.5)),
+                        child: Text('in mind?',
+                            style: GoogleFonts.inter(fontSize: 30, fontWeight: FontWeight.w900, color: Colors.white, letterSpacing: -0.5)),
                       ),
                     ),
                   ],
@@ -1007,29 +1001,28 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               Text(
                 "I'm always excited to collaborate on meaningful projects. Let's discuss your idea and bring it to life.",
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 14, color: kText.withOpacity(0.7), height: 1.6),
+                style: GoogleFonts.inter(fontSize: 14, color: kText.withOpacity(0.7), height: 1.6),
               ),
               const SizedBox(height: 28),
-
-              // Buttons
               GestureDetector(
-                onTap: () => _launch('mailto:sachinrathod@example.com'),
+                onTap: () => _launch('mailto:rathodsachin0766@gmail.com'),
                 child: Container(
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(colors: [kIndigo, kPurple, kPink]),
                     borderRadius: BorderRadius.circular(16),
-                    boxShadow: [BoxShadow(color: kIndigo.withOpacity(0.4), blurRadius: 20, offset: const Offset(0, 8))],
+                    boxShadow: [BoxShadow(color: kIndigo.withOpacity(0.45), blurRadius: 24, offset: const Offset(0, 8))],
                   ),
-                  child: const Row(
+                  child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.auto_awesome_rounded, color: Color(0xFFFDE68A), size: 17),
-                      SizedBox(width: 8),
-                      Text('Start a Conversation', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
-                      SizedBox(width: 8),
-                      Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 16),
+                      const Icon(Icons.auto_awesome_rounded, color: Color(0xFFFDE68A), size: 17),
+                      const SizedBox(width: 8),
+                      Text('Start a Conversation',
+                          style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 15)),
+                      const SizedBox(width: 8),
+                      const Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 16),
                     ],
                   ),
                 ),
@@ -1045,8 +1038,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(color: Colors.white.withOpacity(0.12)),
                   ),
-                  child: const Center(
-                    child: Text('See My Work', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
+                  child: Center(
+                    child: Text('See My Work',
+                        style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 14)),
                   ),
                 ),
               ),
@@ -1058,11 +1052,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   static Shader _gradientShader(Rect bounds) => const LinearGradient(
-    colors: [Color(0xFF818CF8), Color(0xFFC084FC), Color(0xFFEC4899)],
-  ).createShader(bounds);
+        colors: [Color(0xFF818CF8), Color(0xFFC084FC), Color(0xFFEC4899)],
+      ).createShader(bounds);
 }
 
-// ── Supporting Widgets ────────────────────────────────────────
+// ── Supporting Widgets ─────────────────────────────────────────
 
 class _AnimatedBlob extends StatelessWidget {
   final AnimationController controller;
@@ -1112,7 +1106,7 @@ class _ParticlePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     for (final p in particles) {
-      final paint = Paint()..color = p.color.withOpacity(0.25);
+      final paint = Paint()..color = p.color.withOpacity(0.22);
       canvas.drawCircle(Offset(p.x * size.width, p.y * size.height), p.size, paint);
     }
   }
@@ -1142,7 +1136,7 @@ class _FloatingBadge extends StatelessWidget {
         children: [
           Icon(icon, size: 13, color: iconColor),
           const SizedBox(width: 6),
-          Text(label, style: TextStyle(color: textColor, fontSize: 11, fontWeight: FontWeight.bold)),
+          Text(label, style: GoogleFonts.inter(color: textColor, fontSize: 11, fontWeight: FontWeight.w700)),
         ],
       ),
     );
@@ -1172,17 +1166,29 @@ class _SocialChip extends StatelessWidget {
       children: [
         Icon(icon, color: color, size: 16),
         const SizedBox(width: 6),
-        Text(label, style: TextStyle(color: color, fontSize: 13, fontWeight: FontWeight.w600)),
+        Text(label, style: GoogleFonts.inter(color: color, fontSize: 13, fontWeight: FontWeight.w600)),
       ],
     );
   }
 }
 
+// ── Premium Project Card with Glow ─────────────────────────────
 class _ProjectCard extends StatelessWidget {
   final Project project;
   final VoidCallback onTap;
+  final int index;
 
-  const _ProjectCard({required this.project, required this.onTap});
+  const _ProjectCard({required this.project, required this.onTap, required this.index});
+
+  // Map category to a glow color
+  Color get _accentColor {
+    switch (project.category) {
+      case 'mobile': return const Color(0xFF54C5F8);
+      case 'api': return const Color(0xFF4ADE80);
+      case 'web': return const Color(0xFFF59E0B);
+      default: return kIndigo;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -1190,34 +1196,71 @@ class _ProjectCard extends StatelessWidget {
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [kSurface, const Color(0xFF0A0F1E)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(22),
-          border: Border.all(color: Colors.white.withOpacity(0.07)),
-          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.3), blurRadius: 16, offset: const Offset(0, 6))],
+          color: Colors.white.withOpacity(0.03),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: Colors.white.withOpacity(0.08)),
+          boxShadow: [
+            BoxShadow(color: Colors.black.withOpacity(0.35), blurRadius: 24, offset: const Offset(0, 8)),
+            BoxShadow(color: _accentColor.withOpacity(0.1), blurRadius: 40, spreadRadius: -4),
+          ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Thumbnail
+            // Thumbnail with gradient overlay
             if (project.thumbnailUrl.isNotEmpty)
               ClipRRect(
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(22)),
-                child: Image.network(
-                  project.thumbnailUrl,
-                  height: 180,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => Container(
-                    height: 180,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(colors: [kIndigo.withOpacity(0.15), kPurple.withOpacity(0.1)]),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                child: Stack(
+                  children: [
+                    Image.network(
+                      project.thumbnailUrl,
+                      height: 185,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => Container(
+                        height: 185,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [_accentColor.withOpacity(0.15), kPurple.withOpacity(0.1)],
+                          ),
+                        ),
+                        child: Center(child: Icon(Icons.code_rounded, color: _accentColor, size: 40)),
+                      ),
                     ),
-                    child: const Center(child: Icon(Icons.code_rounded, color: kIndigo, size: 40)),
-                  ),
+                    // Bottom gradient overlay
+                    Positioned(
+                      bottom: 0, left: 0, right: 0,
+                      child: Container(
+                        height: 80,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [Colors.transparent, Colors.black.withOpacity(0.6)],
+                          ),
+                        ),
+                      ),
+                    ),
+                    // Category pill
+                    Positioned(
+                      top: 12, right: 12,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: _accentColor.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: _accentColor.withOpacity(0.4)),
+                          boxShadow: [BoxShadow(color: _accentColor.withOpacity(0.2), blurRadius: 10)],
+                        ),
+                        child: Text(
+                          project.category.toUpperCase(),
+                          style: GoogleFonts.inter(
+                              color: _accentColor, fontSize: 9, fontWeight: FontWeight.w800, letterSpacing: 0.8),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
 
@@ -1231,12 +1274,17 @@ class _ProjectCard extends StatelessWidget {
                     children: [
                       Expanded(
                         child: Text(project.title,
-                          style: const TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w800, letterSpacing: -0.3)),
+                            style: GoogleFonts.inter(
+                                color: Colors.white, fontSize: 17, fontWeight: FontWeight.w800, letterSpacing: -0.3)),
                       ),
                       Container(
-                        padding: const EdgeInsets.all(6),
-                        decoration: BoxDecoration(color: kIndigo.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
-                        child: const Icon(Icons.arrow_forward_rounded, color: kIndigo, size: 16),
+                        padding: const EdgeInsets.all(7),
+                        decoration: BoxDecoration(
+                          color: _accentColor.withOpacity(0.12),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: _accentColor.withOpacity(0.2)),
+                        ),
+                        child: Icon(Icons.arrow_forward_rounded, color: _accentColor, size: 15),
                       ),
                     ],
                   ),
@@ -1244,8 +1292,8 @@ class _ProjectCard extends StatelessWidget {
                   if (project.shortDesc.isNotEmpty) ...[
                     const SizedBox(height: 8),
                     Text(project.shortDesc,
-                      maxLines: 2, overflow: TextOverflow.ellipsis,
-                      style: TextStyle(color: kText.withOpacity(0.7), fontSize: 13, height: 1.55)),
+                        maxLines: 2, overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.inter(color: kText.withOpacity(0.7), fontSize: 13, height: 1.55)),
                   ],
 
                   if (project.techStack.isNotEmpty) ...[
@@ -1255,16 +1303,16 @@ class _ProjectCard extends StatelessWidget {
                       children: project.techStack.take(4).map((t) => Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
-                          color: kIndigo.withOpacity(0.08),
+                          color: _accentColor.withOpacity(0.07),
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: kIndigo.withOpacity(0.2)),
+                          border: Border.all(color: _accentColor.withOpacity(0.2)),
                         ),
-                        child: Text(t, style: const TextStyle(color: Color(0xFFA5B4FC), fontSize: 11, fontWeight: FontWeight.w600)),
+                        child: Text(t,
+                            style: GoogleFonts.inter(color: _accentColor, fontSize: 11, fontWeight: FontWeight.w600)),
                       )).toList(),
                     ),
                   ],
 
-                  // Live / GitHub links
                   if (project.liveUrl.isNotEmpty || project.githubUrl.isNotEmpty) ...[
                     const SizedBox(height: 14),
                     Row(
@@ -1272,7 +1320,7 @@ class _ProjectCard extends StatelessWidget {
                         if (project.liveUrl.isNotEmpty)
                           _LinkButton(label: 'Live Demo', icon: Icons.open_in_new_rounded, url: project.liveUrl, color: kCyan),
                         if (project.liveUrl.isNotEmpty && project.githubUrl.isNotEmpty)
-                          const SizedBox(width: 10),
+                          const SizedBox(width: 16),
                         if (project.githubUrl.isNotEmpty)
                           _LinkButton(label: 'GitHub', icon: Icons.code_rounded, url: project.githubUrl, color: kText),
                       ],
@@ -1284,7 +1332,10 @@ class _ProjectCard extends StatelessWidget {
           ],
         ),
       ),
-    );
+    )
+        .animate(delay: Duration(milliseconds: 100 * index))
+        .fadeIn(duration: 500.ms)
+        .slideY(begin: 0.2, curve: Curves.easeOutCubic);
   }
 }
 
@@ -1306,15 +1357,15 @@ class _LinkButton extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, color: color, size: 13),
-          const SizedBox(width: 4),
-          Text(label, style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.w600)),
+          const SizedBox(width: 5),
+          Text(label, style: GoogleFonts.inter(color: color, fontSize: 12, fontWeight: FontWeight.w600)),
         ],
       ),
     );
   }
 }
 
-// ── Subtle dot-grid background painter ───────────────────────
+// ── Dot-grid background painter ───────────────────────────────
 class _GridPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
