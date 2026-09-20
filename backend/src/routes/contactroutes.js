@@ -1,6 +1,6 @@
 const express = require('express');
-const { sendMessage, getAllMessages, updateStatus, deleteMessage } = require('../controllers/contact.controller');
-const { protect, admin } = require('../middleware/auth.middleware');
+const { sendMessage, getAllMessages, updateStatus, deleteMessage } = require('../controllers/contactcontroller');
+const { protect, admin } = require('../middleware/authmiddleware');
 const router = express.Router();
 
 router.post('/', sendMessage);

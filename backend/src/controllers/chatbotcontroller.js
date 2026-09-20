@@ -456,8 +456,8 @@ KNOWN ISSUES / FIXES APPLIED
 - DB connection pool limit=3 to avoid ER_USER_LIMIT_REACHED on Clever Cloud free tier.
 - &nbsp; in Quill output: stripped on save (replace /&nbsp;/g with space) and on render.
 - Admin layout: NO footer on any admin pages.
-- SyntaxError "Missing catch or finally after try" in project.controller.js was fixed by ensuring all try{} blocks have matching catch{}.
-- project.controller.js uses separate try/catch inside skill_ids loop to avoid crashing the whole create/update on skill link failure.
+- SyntaxError "Missing catch or finally after try" in projectcontroller.js was fixed by ensuring all try{} blocks have matching catch{}.
+- projectcontroller.js uses separate try/catch inside skill_ids loop to avoid crashing the whole create/update on skill link failure.
 - Image upload in production: requires Cloudinary env vars or throws explicit error rather than silently failing.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

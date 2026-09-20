@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-const { errorHandler } = require('./middleware/error.middleware');
+const { errorHandler } = require('./middleware/errormiddleware');
 
 // In-memory log buffer for remote debugging
 global.logBuffer = [];
@@ -29,14 +29,14 @@ console.error = (...args) => {
 };
 
 // Route imports
-const authRoutes = require('./routes/auth.routes');
-const projectRoutes = require('./routes/project.routes');
-const skillRoutes = require('./routes/skill.routes');
-const blogRoutes = require('./routes/blog.routes');
-const contactRoutes = require('./routes/contact.routes');
-const settingRoutes = require('./routes/setting.routes');
-const mediaRoutes = require('./routes/media.routes');
-const chatbotRoutes = require('./routes/chatbot.routes');
+const authRoutes = require('./routes/authroutes');
+const projectRoutes = require('./routes/projectroutes');
+const skillRoutes = require('./routes/skillroutes');
+const blogRoutes = require('./routes/blogroutes');
+const contactRoutes = require('./routes/contactroutes');
+const settingRoutes = require('./routes/settingroutes');
+const mediaRoutes = require('./routes/mediaroutes');
+const chatbotRoutes = require('./routes/chatbotroutes');
 const pool = require('./config/database');
 
 const app = express();

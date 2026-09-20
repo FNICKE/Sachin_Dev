@@ -1,6 +1,6 @@
 const express = require('express');
-const { getAllSkills, createSkill, updateSkill, deleteSkill } = require('../controllers/skill.controller');
-const { protect, admin } = require('../middleware/auth.middleware');
+const { getAllSkills, createSkill, updateSkill, deleteSkill } = require('../controllers/skillcontroller');
+const { protect, admin } = require('../middleware/authmiddleware');
 const router = express.Router();
 
 router.get('/', getAllSkills);

@@ -1,7 +1,7 @@
 const express = require('express');
-const { getAllBlogs, getBySlug, getById, createBlog, updateBlog, deleteBlog } = require('../controllers/blog.controller');
-const { protect, admin } = require('../middleware/auth.middleware');
-const upload = require('../middleware/upload.middleware');
+const { getAllBlogs, getBySlug, getById, createBlog, updateBlog, deleteBlog } = require('../controllers/blogcontroller');
+const { protect, admin } = require('../middleware/authmiddleware');
+const upload = require('../middleware/uploadmiddleware');
 const router = express.Router();
 
 router.get('/', getAllBlogs);

@@ -1,5 +1,5 @@
 const express = require('express');
-const { chat } = require('../controllers/chatbot.controller');
+const { chat } = require('../controllers/chatbotcontroller');
 const router = express.Router();
 
 // POST /api/chat  — Public, no auth required

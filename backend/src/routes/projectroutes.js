@@ -1,7 +1,7 @@
 const express = require('express');
-const { getAllProjects, getBySlug, getById, createProject, updateProject, deleteProject } = require('../controllers/project.controller');
-const { protect, admin } = require('../middleware/auth.middleware');
-const upload = require('../middleware/upload.middleware');
+const { getAllProjects, getBySlug, getById, createProject, updateProject, deleteProject } = require('../controllers/projectcontroller');
+const { protect, admin } = require('../middleware/authmiddleware');
+const upload = require('../middleware/uploadmiddleware');
 const router = express.Router();
 
 router.get('/', getAllProjects);
