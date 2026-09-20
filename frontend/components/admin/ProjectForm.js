@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import api from '@/lib/api';
+import api, { getImageUrl } from '@/lib/api';
 import { useRouter } from 'next/navigation';
 import { Button, Card, Badge, RichTextEditor } from '@/components/ui';
 import { 
@@ -284,7 +284,7 @@ const ProjectForm = ({ id }) => {
                     className="absolute inset-0 opacity-0 cursor-pointer z-20"
                   />
                   {thumbnailFile || formData.thumbnail_url ? (
-                    <img src={thumbnailFile ? URL.createObjectURL(thumbnailFile) : formData.thumbnail_url} alt="Project visual asset preview" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    <img src={thumbnailFile ? URL.createObjectURL(thumbnailFile) : getImageUrl(formData.thumbnail_url)} alt="Project visual asset preview" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                   ) : (
                     <div className="flex flex-col items-center gap-1.5 text-white/20 group-hover:text-primary transition-colors">
                       <ImageIcon size={24} strokeWidth={1} />
