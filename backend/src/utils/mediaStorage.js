@@ -62,7 +62,7 @@ const storeImage = async (file, req, folder) => {
   }
 
   if (process.env.NODE_ENV === 'production') {
-    throw new Error('Persistent image storage is not configured. Add Cloudinary credentials before uploading images.');
+    console.warn('WARNING: Cloudinary is not configured. Images will be saved locally. If you are using a standard Render server, these images WILL BE DELETED on the next deployment unless you have attached a persistent disk.');
   }
 
   return saveLocally(file, req);
