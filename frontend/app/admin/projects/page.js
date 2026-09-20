@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import api from '@/lib/api';
+import api, { getImageUrl } from '@/lib/api';
 import { Card, Button, Badge } from '@/components/ui';
 import { 
   PlusCircle, 
@@ -162,7 +162,7 @@ const ProjectsManagement = () => {
                   <td className="px-5 py-2.5">
                      <div className="flex items-center gap-3">
                         <div className="w-14 h-8 rounded bg-white/5 overflow-hidden border border-white/5 relative shrink-0">
-                           {project.thumbnail_url ? <img src={project.thumbnail_url} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-white/10"><ImageIcon size={14} /></div>}
+                           {project.thumbnail_url ? <img src={getImageUrl(project.thumbnail_url)} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-white/10"><ImageIcon size={14} /></div>}
                         </div>
                         <div>
                            <p className="text-xs font-black text-white truncate group-hover:text-primary transition-colors leading-none">{project.title}</p>

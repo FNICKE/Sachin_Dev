@@ -5,6 +5,13 @@ export const API_URL = process.env.NEXT_PUBLIC_API_URL
   : DEFAULT_API_URL;
 export const BASE_URL = API_URL.replace('/api', '');
 
+export const getImageUrl = (url) => {
+  if (!url) return '';
+  if (url.startsWith('/uploads/')) return `${BASE_URL}${url}`;
+  if (url.startsWith('http://sachin-dev-59j2.onrender.com')) return url.replace('http://', 'https://');
+  return url;
+};
+
 const getAuthHeaders = () => {
   const token = typeof window !== 'undefined' ? localStorage.getItem('admin_token') : null;
   const headers = {
