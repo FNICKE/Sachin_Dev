@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../data/site.dart';
 import '../services/links.dart';
+import '../services/update_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/reveal.dart';
 import '../widgets/ui.dart';
@@ -82,6 +84,56 @@ class SiteFooter extends StatelessWidget {
               Expanded(child: Text('© ${DateTime.now().year} ${Site.name}', style: AppText.mono(9.5, color: p.dim))),
               MumbaiClock(style: AppText.mono(9.5, color: p.dim)),
             ],
+          ),
+          const SizedBox(height: 12),
+          Consumer<UpdateService>(
+            builder: (context, updater, _) {
+              final hasUpdate = updater.hasUpdate;
+              final latest = updater.latest;
+              return GestureDetector(
+                onTap: () {
+                  if (hasUpdate) {
+                    openLink(context, latest?.apkUrl ?? Site.apkDownloadUrl);
+                  } else {
+                    updater.checkForUpdate();
+                    ScaffoldMessenger.of(context)
+                      ..hideCurrentSnackBar()
+                      ..showSnackBar(SnackBar(
+                        content: Text('Sachin Dev v${updater.currentVersion} • App is up to date'),
+                        duration: const Duration(seconds: 2),
+                      ));
+                  }
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: hasUpdate ? p.brand.withOpacity(0.12) : p.surface,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: hasUpdate ? p.brand : p.line),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 6,
+                        height: 6,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: hasUpdate ? p.brand : const Color(0xFF22C55E),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        hasUpdate
+                            ? 'v${updater.currentVersion} • Update v${latest?.version} available ↗'
+                            : 'v${updater.currentVersion} • Up to date',
+                        style: AppText.mono(10.5, color: hasUpdate ? p.brand : p.dim),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
           ),
           const SizedBox(height: 18),
           ExcludeSemantics(

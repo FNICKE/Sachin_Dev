@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 
 import 'providers/portfolio_provider.dart';
 import 'screens/shell.dart';
+import 'services/update_service.dart';
 import 'theme/app_theme.dart';
 import 'theme/theme_controller.dart';
 
@@ -45,6 +46,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => PortfolioProvider()..loadPortfolioData()),
         ChangeNotifierProvider(create: (_) => ThemeController()),
         ChangeNotifierProvider(create: (_) => ShellController()),
+        ChangeNotifierProvider(create: (_) => UpdateService()),
       ],
       child: Consumer<ThemeController>(
         builder: (context, theme, _) {

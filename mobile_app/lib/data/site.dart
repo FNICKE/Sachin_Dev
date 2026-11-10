@@ -26,6 +26,11 @@ class Site {
   static int get yearsBuilding => max(1, DateTime.now().year - startedBuilding);
 
   static const stack = ['Next.js', 'React', 'Node.js', 'MySQL', 'Flutter'];
+
+  static const appVersion = '1.0.18';
+  static const buildNumber = 18;
+  static const apkDownloadUrl =
+      'https://github.com/FNICKE/Sachin_Dev/releases/download/mobile-latest/app-release.apk';
 }
 
 /// Intro paragraph split into segments; `true` segments are set in orange italic.

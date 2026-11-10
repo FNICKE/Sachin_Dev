@@ -41,33 +41,59 @@ jobs:
         run: flutter pub get
         working-directory: mobile_app
 
-      # 5. Build the Android APK for direct installation/testing
+      # 5. Generate Version & Build Metadata
+      - name: Generate Version Metadata
+        id: meta
+        run: |
+          VERSION="1.0.${{ github.run_number }}"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          cat <<EOF > mobile_app/version.json
+          {
+            "version": "$VERSION",
+            "build_number": ${{ github.run_number }},
+            "apk_url": "https://github.com/${{ github.repository }}/releases/download/mobile-latest/app-release.apk",
+            "published_at": "$(date -u +'%Y-%m-%dT%H:%M:%SZ')",
+            "title": "Sachin Dev v$VERSION"
+          }
+          EOF
+          echo "Generated version.json for v$VERSION (build ${{ github.run_number }})"
+          cat mobile_app/version.json
+
+      # 6. Build the Android APK with automated version & build number
       - name: Build Release APK
-        run: flutter build apk --release
+        run: |
+          flutter build apk --release --build-name=${{ steps.meta.outputs.version }} --build-number=${{ github.run_number }}
         working-directory: mobile_app
 
-      # 6. Upload the compiled APK as artifact
+      # 7. Upload the compiled APK and version metadata as artifacts
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: mobile-app-release-apk
-          path: mobile_app/build/app/outputs/flutter-apk/app-release.apk
+          path: |
+            mobile_app/build/app/outputs/flutter-apk/app-release.apk
+            mobile_app/version.json
 
-      # 7. Publish direct-download release
-      - name: Update GitHub Release with APK
+      # 8. Publish or update GitHub Release with the latest APK
+      - name: Update GitHub Release with APK & Version Metadata
         uses: softprops/action-gh-release@v2
         if: github.ref == 'refs/heads/main'
         continue-on-error: true
         with:
           tag_name: mobile-latest
-          name: Sachin Dev Mobile App (Release APK)
+          name: Sachin Dev Mobile App v${{ steps.meta.outputs.version }}
           body: |
-            ### 📱 Sachin Dev Mobile App - Latest Release
+            ### 📱 Sachin Dev Mobile App — v${{ steps.meta.outputs.version }}
 
-            - Brand New Editorial / Dark Craft UI
-            - Custom Typography & Palette (#0C0C0B canvas, #FF5C26 vermilion brand signal)
-            - Upgraded adaptive and squircle app launcher icon
+            - **Version**: `v${{ steps.meta.outputs.version }}`
+            - **Build Number**: `${{ github.run_number }}`
+            - **Built on**: $(date -u +'%Y-%m-%d %H:%M UTC')
+            - **Commit**: `${{ github.sha }}`
 
-            **Direct APK Download**: [app-release.apk](https://github.com/${{ github.repository }}/releases/download/mobile-latest/app-release.apk)
-          files: mobile_app/build/app/outputs/flutter-apk/app-release.apk
+            #### 📥 Direct Downloads
+            - [**Download Latest APK (app-release.apk)**](https://github.com/${{ github.repository }}/releases/download/mobile-latest/app-release.apk)
+            - [View Version Metadata (version.json)](https://github.com/${{ github.repository }}/releases/download/mobile-latest/version.json)
+          files: |
+            mobile_app/build/app/outputs/flutter-apk/app-release.apk
+            mobile_app/version.json
           token: ${{ secrets.GITHUB_TOKEN }}

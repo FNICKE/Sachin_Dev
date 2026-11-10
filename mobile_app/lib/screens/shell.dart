@@ -4,6 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
+import '../data/site.dart';
+import '../services/links.dart';
+import '../services/update_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/contact_sheet.dart';
 import '../widgets/reveal.dart';
@@ -136,6 +139,52 @@ class _ShellState extends State<Shell> with SingleTickerProviderStateMixin {
                   children: [for (var i = 0; i < pages.length; i++) TabEntry(notifier: shell.entries[i], child: pages[i])],
                 ),
               ),
+            ),
+            // Update available notification banner
+            Consumer<UpdateService>(
+              builder: (context, updater, _) {
+                if (!updater.hasUpdate) return const SizedBox.shrink();
+                final topInset = MediaQuery.of(context).padding.top;
+                return Positioned(
+                  top: topInset + 8,
+                  left: 16,
+                  right: 16,
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(16),
+                      onTap: () => openLink(context, updater.latest?.apkUrl ?? Site.apkDownloadUrl),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: p.brand,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: p.brand.withOpacity(0.35),
+                              blurRadius: 16,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.system_update_rounded, color: p.brandInk, size: 20),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                'Update v' + (updater.latest?.version ?? '') + ' available — Tap to install',
+                                style: AppText.sans(13.5, color: p.brandInk, weight: FontWeight.w600),
+                              ),
+                            ),
+                            Icon(Icons.arrow_forward_rounded, color: p.brandInk, size: 18),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              },
             ),
             // Floating "Let's talk": appears once you scroll past the top of a tab (the Home hero
             // has its own buttons) and never shows on Contact, which already lists every option.
