@@ -26,7 +26,7 @@ class PortraitCard extends StatefulWidget {
 }
 
 class _PortraitCardState extends State<PortraitCard>
-    with SingleTickerProviderStateMixin, EntranceAnimation {
+    with TickerProviderStateMixin, EntranceAnimation {
   late final AnimationController _float;
 
   @override
