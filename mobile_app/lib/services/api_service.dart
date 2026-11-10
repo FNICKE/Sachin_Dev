@@ -25,45 +25,43 @@ class ApiService {
   // Fallback production URL if local server is down
   static const String fallbackUrl = _productionUrl;
 
-  // ── Fix image URLs: upgrade http → https, replace localhost → production ──
+  static const String _host = 'https://sachin-dev-59j2.onrender.com';
+
+  // The free Render server can take 30+ seconds to wake up.
+  static const Duration _wakeTimeout = Duration(seconds: 45);
+
+  /// Makes any image URL stored by the backend loadable in the app:
+  /// relative "/uploads/…" paths, localhost URLs saved during development,
+  /// plain http:// URLs, and the backend's placehold.co "No Image" defaults.
   static String fixImageUrl(String url) {
-    if (url.isEmpty) return url;
-    // Replace localhost thumbnail URLs with production
-    if (url.contains('localhost') || url.contains('10.0.2.2')) {
-      // Extract filename from path
-      final uri = Uri.tryParse(url);
-      if (uri != null) {
-        final path = uri.path; // e.g. /uploads/thumbnail-xxx.png
-        return 'https://sachin-dev-59j2.onrender.com$path';
-      }
-      return url;
+    final value = url.trim();
+    if (value.isEmpty || value == 'null' || value == 'undefined') return '';
+    if (value.contains('placehold.co')) return '';
+    if (value.startsWith('data:')) return value;
+    if (value.startsWith('/')) return '$_host$value';
+    if (value.contains('localhost') || value.contains('127.0.0.1') || value.contains('10.0.2.2')) {
+      final uri = Uri.tryParse(value);
+      return uri == null ? value : '$_host${uri.path}';
     }
-    // Upgrade http:// → https://
-    if (url.startsWith('http://')) {
-      return url.replaceFirst('http://', 'https://');
-    }
-    return url;
+    if (value.startsWith('http://')) return value.replaceFirst('http://', 'https://');
+    return value;
   }
 
-  // Helper method to make GET requests with fallback logic
+  // GET with fallback: in debug builds try the local server first, then production.
+  // In release builds the primary URL *is* production, so there is one patient request.
   Future<http.Response> _getWithFallback(String path) async {
+    if (kReleaseMode) {
+      return http.get(Uri.parse('$_productionUrl$path')).timeout(_wakeTimeout);
+    }
     final primaryUri = Uri.parse('$baseUrl$path');
-    final backupUri = Uri.parse('$fallbackUrl$path');
-
     try {
-      if (kDebugMode) {
-        print('API GET request to: $primaryUri');
-      }
+      if (kDebugMode) debugPrint('API GET $primaryUri');
       final response = await http.get(primaryUri).timeout(const Duration(seconds: 4));
-      if (response.statusCode >= 200 && response.statusCode < 300) {
-        return response;
-      }
+      if (response.statusCode >= 200 && response.statusCode < 300) return response;
       throw Exception('Server returned status ${response.statusCode}');
     } catch (e) {
-      if (kDebugMode) {
-        print('Primary API request failed: $e. Falling back to: $backupUri');
-      }
-      return await http.get(backupUri).timeout(const Duration(seconds: 10));
+      if (kDebugMode) debugPrint('Local API failed ($e), using production');
+      return http.get(Uri.parse('$fallbackUrl$path')).timeout(_wakeTimeout);
     }
   }
 
@@ -151,9 +149,18 @@ class ApiService {
     });
 
     Future<bool> postToUri(Uri uri) async {
-      final response = await http.post(uri, headers: headers, body: body).timeout(const Duration(seconds: 8));
+      final response = await http.post(uri, headers: headers, body: body).timeout(_wakeTimeout);
       final jsonResponse = jsonDecode(response.body);
       return jsonResponse['success'] == true;
+    }
+
+    // One attempt in release builds — retrying the same server could save the message twice.
+    if (kReleaseMode) {
+      try {
+        return await postToUri(Uri.parse('$_productionUrl/contacts'));
+      } catch (_) {
+        return false;
+      }
     }
 
     try {
@@ -190,13 +197,15 @@ class ApiService {
     });
 
     Future<String> postToUri(Uri uri) async {
-      final response = await http.post(uri, headers: headers, body: body).timeout(const Duration(seconds: 12));
+      final response = await http.post(uri, headers: headers, body: body).timeout(_wakeTimeout);
       final jsonResponse = jsonDecode(response.body);
       if (jsonResponse['success'] == true && jsonResponse['data'] != null) {
         return jsonResponse['data']['reply'] ?? '';
       }
       throw Exception(jsonResponse['message'] ?? 'Failed to get bot reply');
     }
+
+    if (kReleaseMode) return postToUri(Uri.parse('$_productionUrl/chat'));
 
     try {
       if (kDebugMode) {

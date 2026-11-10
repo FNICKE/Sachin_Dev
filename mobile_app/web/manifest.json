@@ -1,11 +1,11 @@
 {
-    "name": "mobile_app",
-    "short_name": "mobile_app",
+    "name": "Sachin Rathod",
+    "short_name": "Sachin Dev",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#0C0C0B",
+    "theme_color": "#FF5C26",
+    "description": "Sachin Rathod — software developer and fullstack builder.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

@@ -16,6 +16,10 @@ dependencies:
   cupertino_icons: ^1.0.6
   google_fonts: ^6.1.0
   flutter_animate: ^4.5.0
+  lottie: ^3.1.3
+  animations: ^2.0.11
+  shimmer: ^3.0.0
+  flex_color_scheme: ^8.0.0
 
 dev_dependencies:
   flutter_test:
@@ -26,3 +30,5 @@ flutter:
   uses-material-design: true
   assets:
     - assets/images/
+    # Bundled so text appears instantly and works offline (google_fonts finds them by file name).
+    - assets/google_fonts/

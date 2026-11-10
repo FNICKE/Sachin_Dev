@@ -9,6 +9,9 @@ on:
       - '.github/workflows/build_apk.yml'
   workflow_dispatch: # Allows manual trigger from GitHub Actions tab
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -29,7 +32,7 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.22.2' # Matches your local version exactly
+          flutter-version: '3.22.2'
           channel: 'stable'
           cache: true
 
@@ -43,9 +46,28 @@ jobs:
         run: flutter build apk --release
         working-directory: mobile_app
 
-      # 6. Upload the compiled APK
+      # 6. Upload the compiled APK as artifact
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: mobile-app-release-apk
           path: mobile_app/build/app/outputs/flutter-apk/app-release.apk
+
+      # 7. Publish direct-download release
+      - name: Update GitHub Release with APK
+        uses: softprops/action-gh-release@v2
+        if: github.ref == 'refs/heads/main'
+        continue-on-error: true
+        with:
+          tag_name: mobile-latest
+          name: Sachin Dev Mobile App (Release APK)
+          body: |
+            ### 📱 Sachin Dev Mobile App - Latest Release
+
+            - Brand New Editorial / Dark Craft UI
+            - Custom Typography & Palette (#0C0C0B canvas, #FF5C26 vermilion brand signal)
+            - Upgraded adaptive and squircle app launcher icon
+
+            **Direct APK Download**: [app-release.apk](https://github.com/${{ github.repository }}/releases/download/mobile-latest/app-release.apk)
+          files: mobile_app/build/app/outputs/flutter-apk/app-release.apk
+          token: ${{ secrets.GITHUB_TOKEN }}

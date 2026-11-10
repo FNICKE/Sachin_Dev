@@ -16,6 +16,7 @@ class Project {
   final bool featured;
   final int sortOrder;
   final List<Skill> skills;
+  final int? year;
 
   Project({
     required this.id,
@@ -32,6 +33,7 @@ class Project {
     required this.featured,
     required this.sortOrder,
     required this.skills,
+    this.year,
   });
 
   factory Project.fromJson(Map<String, dynamic> json) {
@@ -59,15 +61,24 @@ class Project {
       shortDesc: json['short_desc'] ?? '',
       description: json['description'] ?? '',
       thumbnailUrl: ApiService.fixImageUrl(json['thumbnail_url'] ?? ''),
-      liveUrl: json['live_url'] ?? '',
-      githubUrl: json['github_url'] ?? '',
+      liveUrl: _cleanUrl(json['live_url']),
+      githubUrl: _cleanUrl(json['github_url']),
       techStack: parsedTechStack,
       category: json['category'] ?? 'fullstack',
       status: json['status'] ?? 'completed',
       featured: json['featured'] == 1 || json['featured'] == true,
       sortOrder: json['sort_order'] is int ? json['sort_order'] : int.parse(json['sort_order']?.toString() ?? '0'),
       skills: parsedSkills,
+      year: DateTime.tryParse(json['created_at']?.toString() ?? '')?.year,
     );
+  }
+
+  /// Ignores empty / "null" values and adds https:// to bare "www." links.
+  static String _cleanUrl(dynamic value) {
+    final s = (value ?? '').toString().trim();
+    if (s.isEmpty || s == 'null' || s == 'undefined') return '';
+    if (s.toLowerCase().startsWith('www.')) return 'https://$s';
+    return s;
   }
 
   Map<String, dynamic> toJson() {

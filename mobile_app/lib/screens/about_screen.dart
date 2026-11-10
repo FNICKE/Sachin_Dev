@@ -1,690 +1,372 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import '../data/site.dart';
+import '../models/skill.dart';
+import '../providers/portfolio_provider.dart';
+import '../services/links.dart';
+import '../theme/app_theme.dart';
+import '../widgets/marquee.dart';
+import '../widgets/portrait_card.dart';
+import '../widgets/reveal.dart';
+import '../widgets/ui.dart';
+import 'shell.dart';
+import 'site_footer.dart';
 
 class AboutScreen extends StatelessWidget {
-  const AboutScreen({super.key});
+  const AboutScreen({super.key, required this.controller});
+  final ScrollController controller;
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFF13131B),
-      body: Stack(
-        children: [
-          // ── Background Atmospheric Shaders ──
-          Positioned(
-            top: -100,
-            left: -100,
-            child: Container(
-              width: 300,
-              height: 300,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: const Color(0xFF8083FF).withOpacity(0.12),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF8083FF).withOpacity(0.12),
-                    blurRadius: 100,
-                    spreadRadius: 50,
+    final p = context.palette;
+    final data = context.watch<PortfolioProvider>();
+
+    return RefreshIndicator(
+      color: p.brand,
+      backgroundColor: p.surface,
+      onRefresh: data.refreshData,
+      child: CustomScrollView(
+        controller: controller,
+        physics: const AlwaysScrollableScrollPhysics(
+            parent: BouncingScrollPhysics()),
+        slivers: [
+          const SiteTopBar(title: 'About'),
+          const SliverToBoxAdapter(
+            child: PageTitle(
+                label: 'About',
+                meta: Site.location,
+                title: 'Software developer,',
+                italic: 'builder by habit.'),
+          ),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const PortraitCard(
+                      showOverlay: false,
+                      delay: Duration(milliseconds: 150),
+                      floating: true),
+                  const SizedBox(height: 10),
+                  const Row(
+                    children: [
+                      Expanded(child: SectionLabel(Site.role)),
+                      SectionLabel('B.E. Computer Eng.'),
+                    ],
                   ),
+                  const SizedBox(height: 30),
+                  WordReveal.text(
+                    story[0],
+                    style: AppText.serif(29,
+                        color: p.ink, height: 1.14, spacing: -0.01),
+                    stagger: const Duration(milliseconds: 22),
+                  ),
+                  for (var i = 1; i < story.length; i++)
+                    Reveal(
+                      delay: Duration(milliseconds: 60 * i),
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 18),
+                        child: Text(story[i],
+                            style: AppText.sans(16.5,
+                                color: p.ink.withOpacity(0.8), height: 1.6)),
+                      ),
+                    ),
+                  const SizedBox(height: 24),
+                  Wrap(
+                    spacing: 10,
+                    runSpacing: 10,
+                    children: [
+                      if (data.resumeUrl.isNotEmpty)
+                        PillButton(
+                          label: 'View résumé',
+                          style: PillStyle.ink,
+                          trailing: Icons.north_east_rounded,
+                          onTap: () => openLink(context, data.resumeUrl),
+                        ),
+                      PillButton(
+                        label: 'Get in touch',
+                        style: PillStyle.outline,
+                        trailing: Icons.arrow_forward_rounded,
+                        onTap: () => goToTab(context, kContact),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 56),
+                  const _Principles(),
+                  const SizedBox(height: 48),
+                  const SectionLabel('(02) — The path so far'),
+                  const SizedBox(height: 12),
+                  const Reveal(
+                      child: SerifHeading('Four years,',
+                          italic: 'one direction.', size: 46)),
+                  const SizedBox(height: 18),
+                  const _Timeline(),
                 ],
               ),
             ),
           ),
-          Positioned(
-            bottom: 100,
-            right: -100,
-            child: Container(
-              width: 300,
-              height: 300,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: const Color(0xFF4CD7F6).withOpacity(0.1),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF4CD7F6).withOpacity(0.1),
-                    blurRadius: 100,
-                    spreadRadius: 50,
-                  ),
-                ],
+          if (data.skills.isNotEmpty) ...[
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 56, 20, 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SectionLabel('(03) — Toolbox'),
+                    const SizedBox(height: 12),
+                    Reveal(
+                        child: SerifHeading('Tools I',
+                            italic: 'reach for',
+                            size: 46,
+                            count: data.skills.length)),
+                  ],
+                ),
               ),
             ),
-          ),
-
-          // ── Scrollable Content ──
-          CustomScrollView(
-            physics: const BouncingScrollPhysics(),
-            slivers: [
-              // Top Space / AppBar Placeholder
-              const SliverToBoxAdapter(
-                child: SizedBox(height: 60),
-              ),
-
-              // Section 1: Profile Header
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Badge
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF8083FF).withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(
-                            color: const Color(0xFF8083FF).withOpacity(0.2),
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(
-                              Icons.badge_outlined,
-                              size: 14,
-                              color: Color(0xFFC0C1FF),
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              'BEHIND THE SCREEN',
-                              style: TextStyle(
-                                fontFamily: 'Geist',
-                                color: const Color(0xFFC0C1FF),
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: 1.2,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Title
-                      RichText(
-                        text: const TextSpan(
-                          children: [
-                            TextSpan(
-                              text: 'Sachin ',
-                              style: TextStyle(
-                                fontFamily: 'Outfit',
-                                fontSize: 44,
-                                fontWeight: FontWeight.w900,
-                                color: Colors.white,
-                                letterSpacing: -0.5,
-                              ),
-                            ),
-                            TextSpan(
-                              text: 'M.',
-                              style: TextStyle(
-                                fontFamily: 'Outfit',
-                                fontSize: 44,
-                                fontWeight: FontWeight.w900,
-                                color: Color(0xFFC0C1FF),
-                                letterSpacing: -0.5,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Subtitle text
-                      RichText(
-                        text: const TextSpan(
-                          style: TextStyle(
-                            fontFamily: 'Inter',
-                            fontSize: 16,
-                            color: Color(0xFFC7C4D7),
-                            height: 1.6,
-                          ),
-                          children: [
-                            TextSpan(text: 'A Computer Engineering student based in '),
-                            TextSpan(
-                              text: 'Mumbai, India',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                decoration: TextDecoration.underline,
-                                decorationColor: Color(0xFFC0C1FF),
-                                decorationThickness: 2,
-                              ),
-                            ),
-                            TextSpan(text: '. I bridge the gap between complex engineering logic and elegant user experiences.'),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-
-                      // Image / Avatar Container
-                      Center(
-                        child: Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            // Outer glow ring
-                            Container(
-                              width: double.infinity,
-                              height: 380,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(32),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: const Color(0xFF6366F1).withOpacity(0.25),
-                                    blurRadius: 50,
-                                    spreadRadius: 5,
-                                  ),
-                                  BoxShadow(
-                                    color: const Color(0xFFEC4899).withOpacity(0.12),
-                                    blurRadius: 40,
-                                    offset: const Offset(10, 20),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            // Gradient border frame
-                            Container(
-                              width: double.infinity,
-                              height: 380,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(32),
-                                gradient: const LinearGradient(
-                                  colors: [
-                                    Color(0xFF6366F1),
-                                    Color(0xFF8B5CF6),
-                                    Color(0xFFEC4899),
-                                  ],
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                ),
-                              ),
-                              padding: const EdgeInsets.all(2),
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(30),
-                                child: Container(
-                                  color: const Color(0xFF0A0F1E),
-                                  child: Image.asset(
-                                    'assets/images/profile.png',
-                                    fit: BoxFit.contain,
-                                    width: double.infinity,
-                                    height: 376,
-                                    errorBuilder: (context, error, stackTrace) => Container(
-                                      height: 376,
-                                      color: const Color(0xFF13131B),
-                                      child: Column(
-                                        mainAxisAlignment: MainAxisAlignment.center,
-                                        children: [
-                                          Container(
-                                            width: 100, height: 100,
-                                            decoration: const BoxDecoration(
-                                              shape: BoxShape.circle,
-                                              gradient: LinearGradient(
-                                                colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
-                                              ),
-                                            ),
-                                            child: const Center(
-                                              child: Text('SR',
-                                                style: TextStyle(color: Colors.white, fontSize: 36, fontWeight: FontWeight.w900)),
-                                            ),
-                                          ),
-                                          const SizedBox(height: 16),
-                                          const Text('Sachin Rathod',
-                                            style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
-                                          const SizedBox(height: 6),
-                                          Text('Fullstack Developer',
-                                            style: TextStyle(color: const Color(0xFF94A3B8).withOpacity(0.7), fontSize: 14)),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                            // Overlay badge bottom-right
-                            Positioned(
-                              bottom: 14,
-                              right: 14,
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFF0A0F1E).withOpacity(0.9),
-                                  borderRadius: BorderRadius.circular(16),
-                                  border: Border.all(color: Colors.white.withOpacity(0.12)),
-                                ),
-                                child: const Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(Icons.code_rounded, size: 14, color: Color(0xFFC0C1FF)),
-                                    SizedBox(width: 8),
-                                    Text(
-                                      'Crafting 0s & 1s',
-                                      style: TextStyle(
-                                        color: Color(0xFFE4E1ED),
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-
-                      // Quick Info Items
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _buildInfoCard(
-                              Icons.school_outlined,
-                              'Major',
-                              'Computer Engineering',
-                              const Color(0xFF4CD7F6),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: _buildInfoCard(
-                              Icons.location_on_outlined,
-                              'Location',
-                              'Mumbai, India',
-                              const Color(0xFFFFB0CD),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 48),
-                    ],
-                  ),
-                ),
-              ),
-
-              // Section 2: Journey & Core Philosophy
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'The Journey',
-                        style: TextStyle(
-                          fontFamily: 'Outfit',
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-
-                      // Timeline Items
-                      _buildTimelineItem('2022', 'Joined Engineering',
-                          'Embarked on the journey of Computer Engineering, diving deep into data structures and algorithmic thinking.',
-                          const Color(0xFFC0C1FF), true),
-                      _buildTimelineItem('2023', 'First Web Project',
-                          'Discovered the magic of the browser. Built my first full-stack application using the MERN stack.',
-                          const Color(0xFF4CD7F6), true),
-                      _buildTimelineItem('2024', 'Started Freelancing',
-                          'Began collaborating with global clients, turning complex business requirements into scalable digital solutions.',
-                          const Color(0xFFFFB0CD), true),
-                      _buildTimelineItem('2025', 'Scale & Open Source',
-                          'Focusing on contributing to major open-source ecosystems and building high-performance systems.',
-                          const Color(0xFF8083FF), false),
-
-                      const SizedBox(height: 48),
-
-                      const Text(
-                        'Core Philosophy',
-                        style: TextStyle(
-                          fontFamily: 'Outfit',
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-
-                      // Philosophy items
-                      _buildPhilosophyCard(
-                        Icons.cleaning_services_rounded,
-                        'Clean Code Enthusiast',
-                        'I believe code is for humans first, machines second. I prioritize readability, maintainability, and elegant architecture.',
-                        const Color(0xFFC0C1FF),
-                      ),
-                      const SizedBox(height: 16),
-                      _buildPhilosophyCard(
-                        Icons.psychology_rounded,
-                        'Problem Solver',
-                        'The thrill of debugging a complex logic leak is what drives me. I treat every challenge as a puzzle waiting to be solved.',
-                        const Color(0xFF4CD7F6),
-                      ),
-                      const SizedBox(height: 16),
-                      _buildPhilosophyCard(
-                        Icons.auto_stories_rounded,
-                        'Lifelong Learner',
-                        'The tech landscape evolves daily. I dedicate 10 hours a week to learning new frameworks, languages, and design patterns.',
-                        const Color(0xFFFFB0CD),
-                      ),
-
-                      const SizedBox(height: 48),
-                    ],
-                  ),
-                ),
-              ),
-
-              // Section 3: Beyond the IDE (Bento-style Grid)
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Beyond the IDE',
-                        style: TextStyle(
-                          fontFamily: 'Outfit',
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'When I\'m not writing code, you\'ll find me exploring these domains or refueling with some good old-fashioned hobbies.',
-                        style: TextStyle(
-                          fontFamily: 'Inter',
-                          fontSize: 14,
-                          color: Color(0xFFC7C4D7),
-                          height: 1.5,
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-
-                      // Focus Badge
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF1F1F27).withOpacity(0.6),
-                          borderRadius: BorderRadius.circular(30),
-                          border: Border.all(color: const Color(0xFF8083FF).withOpacity(0.3)),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Container(
-                              width: 8,
-                              height: 8,
-                              decoration: const BoxDecoration(
-                                color: Color(0xFFC0C1FF),
-                                shape: BoxShape.circle,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Color(0xFFC0C1FF),
-                                    blurRadius: 6,
-                                    spreadRadius: 1,
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            const Text(
-                              'CURRENT FOCUS: RUST ENGINEERING',
-                              style: TextStyle(
-                                fontFamily: 'Geist',
-                                color: Color(0xFFC0C1FF),
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: 0.8,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-
-                      // Bento grid (2 columns)
-                      GridView.count(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        crossAxisCount: 2,
-                        childAspectRatio: 1.15,
-                        mainAxisSpacing: 12,
-                        crossAxisSpacing: 12,
-                        children: [
-                          _buildBentoItem(Icons.hub_rounded, 'Open Source', const Color(0xFFC0C1FF)),
-                          _buildBentoItem(Icons.palette_outlined, 'UI/UX Design', const Color(0xFF4CD7F6)),
-                          _buildBentoItem(Icons.coffee_rounded, 'Coffee Culture', const Color(0xFFFFB0CD)),
-                          _buildBentoItem(Icons.sports_esports_rounded, 'Gaming', const Color(0xFF8083FF)),
-                          _buildBentoItem(Icons.show_chart_rounded, 'Stock Market', const Color(0xFF4CD7F6)),
-                          _buildBentoItem(Icons.translate_rounded, 'Linguistics', const Color(0xFFC0C1FF)),
-                          _buildBentoItem(Icons.camera_alt_rounded, 'Street Photo', const Color(0xFFFFB0CD)),
-                          _buildBentoItem(Icons.add_rounded, 'Always Learning', const Color(0xFFC7C4D7), isDashed: true),
-                        ],
-                      ),
-
-                      const SizedBox(height: 120), // Bottom navbar gap
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildInfoCard(IconData icon, String label, String value, Color iconColor) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFF1F1F27).withOpacity(0.6),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withOpacity(0.08)),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, color: iconColor, size: 24),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: const TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 11,
-                    color: Color(0xFFC7C4D7),
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  value,
-                  style: const TextStyle(
-                    fontFamily: 'Geist',
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTimelineItem(String year, String title, String desc, Color dotColor, bool showLine) {
-    return IntrinsicHeight(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Timeline indicator column
-          Column(
-            children: [
-              Container(
-                width: 14,
-                height: 14,
+            SliverToBoxAdapter(
+              child: Container(
                 decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: const Color(0xFF13131B),
-                  border: Border.all(color: dotColor, width: 2.5),
-                  boxShadow: [
-                    BoxShadow(
-                      color: dotColor.withOpacity(0.4),
-                      blurRadius: 6,
-                      spreadRadius: 1,
+                    border: Border.symmetric(
+                        horizontal: BorderSide(color: p.line))),
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                child: TextMarquee(
+                    items: [for (final s in data.skills) s.name], speed: 22),
+              ),
+            ),
+            SliverToBoxAdapter(child: _SkillGroups(groups: data.skillGroups)),
+          ],
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 40, 20, 56),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SectionLabel('(04) — Off the clock'),
+                  const SizedBox(height: 14),
+                  Reveal(
+                    child: Text.rich(
+                      TextSpan(
+                        style: AppText.serif(32, color: p.ink, height: 1.15),
+                        children: [
+                          for (var i = 0; i < interests.length; i++) ...[
+                            TextSpan(text: interests[i]),
+                            if (i < interests.length - 1)
+                              TextSpan(
+                                  text: ' / ',
+                                  style: TextStyle(color: p.brand)),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 56),
+                  Center(
+                    child: Column(
+                      children: [
+                        WordReveal.text(
+                          '“$quote”',
+                          alignment: WrapAlignment.center,
+                          style: AppText.serif(44,
+                              color: p.ink, italic: true, height: 1),
+                        ),
+                        const SizedBox(height: 14),
+                        const Reveal(
+                            delay: Duration(milliseconds: 500),
+                            child: SectionLabel('— ${Site.name}')),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SliverToBoxAdapter(child: SiteFooter()),
+        ],
+      ),
+    );
+  }
+}
+
+class _Principles extends StatelessWidget {
+  const _Principles();
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.palette;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Hairline(),
+        const SizedBox(height: 14),
+        const SectionLabel('(01) — How I work'),
+        for (var i = 0; i < principles.length; i++)
+          Reveal(
+            delay: Duration(milliseconds: 60 * i),
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 22),
+              decoration: BoxDecoration(
+                  border: Border(bottom: BorderSide(color: p.line))),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(pad2(i + 1), style: AppText.mono(10.5, color: p.brand)),
+                  const SizedBox(height: 10),
+                  Text(principles[i].$1,
+                      style: AppText.serif(34, color: p.ink)),
+                  const SizedBox(height: 8),
+                  Text(principles[i].$2,
+                      style:
+                          AppText.sans(15.5, color: p.ink.withOpacity(0.75))),
+                ],
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+/// Year-by-year timeline with an orange rail and dots.
+class _Timeline extends StatelessWidget {
+  const _Timeline();
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.palette;
+    return Column(
+      children: [
+        for (var i = 0; i < timeline.length; i++)
+          Reveal(
+            delay: Duration(milliseconds: 40 * i),
+            child: IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  SizedBox(
+                    width: 22,
+                    child: Column(
+                      children: [
+                        Container(
+                            width: 1,
+                            height: 26,
+                            color: i == 0
+                                ? Colors.transparent
+                                : p.brand.withOpacity(0.6)),
+                        Container(
+                          width: 11,
+                          height: 11,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color:
+                                i == timeline.length - 1 ? p.brand : p.canvas,
+                            border: Border.all(color: p.brand, width: 2),
+                          ),
+                        ),
+                        Expanded(
+                          child: Container(
+                            width: 1,
+                            color: i == timeline.length - 1
+                                ? Colors.transparent
+                                : p.brand.withOpacity(0.6),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 8, bottom: 26),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(timeline[i].$1,
+                              style: AppText.serif(44, color: p.ink)),
+                          const SizedBox(height: 4),
+                          Text(timeline[i].$2,
+                              style: AppText.sans(17,
+                                  color: p.ink, weight: FontWeight.w600)),
+                          const SizedBox(height: 4),
+                          Text(timeline[i].$3,
+                              style: AppText.sans(15, color: p.dim)),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class _SkillGroups extends StatelessWidget {
+  const _SkillGroups({required this.groups});
+  final List<(String, List<Skill>)> groups;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.palette;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+      child: Column(
+        children: [
+          for (final (category, skills) in groups)
+            Reveal(
+              child: Container(
+                width: double.infinity,
+                margin: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.all(18),
+                decoration: BoxDecoration(
+                    color: p.surface, borderRadius: BorderRadius.circular(20)),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            (skillGroups[category]?.$1) ?? category,
+                            style: AppText.serif(32, color: p.ink),
+                          ),
+                        ),
+                        SectionLabel(
+                            '${skills.length} ${skills.length == 1 ? 'tool' : 'tools'}'),
+                      ],
+                    ),
+                    if (skillGroups[category] != null) ...[
+                      const SizedBox(height: 4),
+                      Text(skillGroups[category]!.$2,
+                          style: AppText.sans(14, color: p.dim)),
+                    ],
+                    const SizedBox(height: 14),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        for (final s in skills)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 14, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: p.canvas,
+                              borderRadius: BorderRadius.circular(999),
+                              border: Border.all(color: p.line),
+                            ),
+                            child: Text(s.name,
+                                style: AppText.sans(14.5, color: p.ink)),
+                          ),
+                      ],
                     ),
                   ],
                 ),
               ),
-              if (showLine)
-                Expanded(
-                  child: Container(
-                    width: 1.5,
-                    color: const Color(0xFFC0C1FF).withOpacity(0.3),
-                  ),
-                ),
-            ],
-          ),
-          const SizedBox(width: 18),
-
-          // Content card
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.only(bottom: 24.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    year,
-                    style: TextStyle(
-                      fontFamily: 'Geist',
-                      fontSize: 13,
-                      fontWeight: FontWeight.bold,
-                      color: dotColor,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontFamily: 'Outfit',
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    desc,
-                    style: const TextStyle(
-                      fontFamily: 'Inter',
-                      fontSize: 14,
-                      color: Color(0xFFC7C4D7),
-                      height: 1.45,
-                    ),
-                  ),
-                ],
-              ),
             ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPhilosophyCard(IconData icon, String title, String desc, Color iconColor) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: const Color(0xFF1F1F27).withOpacity(0.6),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withOpacity(0.08)),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: iconColor.withOpacity(0.08),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: iconColor.withOpacity(0.2)),
-            ),
-            child: Icon(icon, color: iconColor, size: 26),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontFamily: 'Outfit',
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  desc,
-                  style: const TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 13.5,
-                    color: Color(0xFFC7C4D7),
-                    height: 1.5,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildBentoItem(IconData icon, String title, Color color, {bool isDashed = false}) {
-    return Container(
-      decoration: BoxDecoration(
-        color: isDashed ? Colors.transparent : const Color(0xFF1F1F27).withOpacity(0.6),
-        borderRadius: BorderRadius.circular(20),
-        border: isDashed
-            ? Border.all(color: Colors.white.withOpacity(0.2), style: BorderStyle.solid) // simple border line
-            : Border.all(color: Colors.white.withOpacity(0.08)),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: isDashed ? Colors.white.withOpacity(0.05) : Colors.white.withOpacity(0.03),
-            ),
-            child: Center(
-              child: Icon(
-                icon,
-                color: isDashed ? const Color(0xFFC7C4D7) : color,
-                size: 22,
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            title,
-            style: TextStyle(
-              fontFamily: 'Geist',
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-              color: isDashed ? const Color(0xFFC7C4D7) : Colors.white,
-            ),
-          ),
         ],
       ),
     );
