@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - main
+    paths:
+      - 'mobile_app/**'
+      - '.github/workflows/build_apk.yml'
   workflow_dispatch: # Allows manual trigger from GitHub Actions tab
 
 jobs:
@@ -35,14 +38,14 @@ jobs:
         run: flutter pub get
         working-directory: mobile_app
 
-      # 5. Build Release AppBundle (AAB) for Play Store
-      - name: Build Release AAB
-        run: flutter build appbundle --release
+      # 5. Build the Android APK for direct installation/testing
+      - name: Build Release APK
+        run: flutter build apk --release
         working-directory: mobile_app
 
-      # 7. Upload the compiled AAB as an artifact
-      - name: Upload AAB Artifact
+      # 6. Upload the compiled APK
+      - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: release-aab
-          path: mobile_app/build/app/outputs/bundle/release/app-release.aab
+          name: mobile-app-release-apk
+          path: mobile_app/build/app/outputs/flutter-apk/app-release.apk
