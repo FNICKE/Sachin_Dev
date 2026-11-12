@@ -38,13 +38,19 @@ const settingRoutes = require('./routes/settingroutes');
 const mediaRoutes = require('./routes/mediaroutes');
 const chatbotRoutes = require('./routes/chatbotroutes');
 const pool = require('./config/database');
+const { serveDbImage } = require('./controllers/mediacontroller');
 
 const app = express();
+
+// Render sits behind a proxy: trust it so req.protocol is "https" there.
+app.set('trust proxy', 1);
 
 // Middlewares
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+// Images saved in the database (permanent), then files on this server's disk.
+app.get('/uploads/db/:file', serveDbImage);
 app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 
 // Routes
