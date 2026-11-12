@@ -50,11 +50,15 @@ class AboutScreen extends StatelessWidget {
                       delay: Duration(milliseconds: 150),
                       floating: true),
                   const SizedBox(height: 10),
-                  const Row(
-                    children: [
-                      Expanded(child: SectionLabel(Site.role)),
-                      SectionLabel('B.E. Computer Eng.'),
-                    ],
+                  const Reveal(
+                    delay: Duration(milliseconds: 900),
+                    offset: 10,
+                    child: Wrap(
+                      alignment: WrapAlignment.spaceBetween,
+                      spacing: 16,
+                      runSpacing: 6,
+                      children: [SectionLabel(Site.role), SectionLabel('B.E. Computer Engineering')],
+                    ),
                   ),
                   const SizedBox(height: 30),
                   WordReveal.text(
