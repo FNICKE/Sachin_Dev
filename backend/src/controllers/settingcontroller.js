@@ -31,7 +31,7 @@ const updateResume = async (req, res) => {
     return successResponse(res, { resume_url: resumeUrl }, 'Resume uploaded successfully.');
   } catch (error) {
     console.error(error);
-    return errorResponse(res, 'Resume upload failed.');
+    return errorResponse(res, error.expose ? error.message : 'Resume upload failed.', error.status || 500);
   }
 };
 

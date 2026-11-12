@@ -86,7 +86,7 @@ const createBlog = async (req, res) => {
     return successResponse(res, { id: result.insertId, title, slug }, 'Blog created successfully', 201);
   } catch (error) {
     console.error(error);
-    return errorResponse(res, 'Server error');
+    return errorResponse(res, error.expose ? error.message : 'Server error', error.status || 500);
   }
 };
 
@@ -117,7 +117,7 @@ const updateBlog = async (req, res) => {
     return successResponse(res, null, 'Blog updated successfully');
   } catch (error) {
     console.error(error);
-    return errorResponse(res, 'Server error');
+    return errorResponse(res, error.expose ? error.message : 'Server error', error.status || 500);
   }
 };
 
