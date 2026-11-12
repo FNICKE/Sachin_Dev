@@ -62,7 +62,11 @@ jobs:
       # 6. Build the Android APK with automated version & build number
       - name: Build Release APK
         run: |
-          flutter build apk --release --build-name=${{ steps.meta.outputs.version }} --build-number=${{ github.run_number }}
+          flutter build apk --release \
+            --build-name=${{ steps.meta.outputs.version }} \
+            --build-number=${{ github.run_number }} \
+            --dart-define=APP_VERSION=${{ steps.meta.outputs.version }} \
+            --dart-define=APP_BUILD=${{ github.run_number }}
         working-directory: mobile_app
 
       # 7. Upload the compiled APK and version metadata as artifacts

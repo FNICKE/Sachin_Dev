@@ -30,10 +30,10 @@ class JournalScreen extends StatelessWidget {
         controller: controller,
         physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
         slivers: [
-          const SiteTopBar(title: 'Journal'),
+          const SiteTopBar(title: 'Blog'),
           SliverToBoxAdapter(
             child: PageTitle(
-              label: 'Journal',
+              label: 'Blog',
               title: 'Notes &',
               italic: 'writing',
               count: data.hasLoaded ? data.blogs.length : null,
@@ -136,7 +136,7 @@ class PostScreen extends StatelessWidget {
               icon: const Icon(Icons.arrow_back_rounded),
               onPressed: () => Navigator.of(context).maybePop(),
             ),
-            title: Text('JOURNAL', style: AppText.mono(11, color: p.dim)),
+            title: Text('BLOG', style: AppText.mono(11, color: p.dim)),
             bottom: const PreferredSize(preferredSize: Size.fromHeight(1), child: Hairline()),
           ),
           SliverToBoxAdapter(

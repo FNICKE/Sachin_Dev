@@ -27,8 +27,10 @@ class Site {
 
   static const stack = ['Next.js', 'React', 'Node.js', 'MySQL', 'Flutter'];
 
-  static const appVersion = '1.0.18';
-  static const buildNumber = 18;
+  // Stamped into each APK by GitHub Actions (--dart-define, see .github/workflows/build_apk.yml),
+  // so every build knows its real version. Local `flutter run` builds report build 0.
+  static const appVersion = String.fromEnvironment('APP_VERSION', defaultValue: 'dev');
+  static const buildNumber = int.fromEnvironment('APP_BUILD', defaultValue: 0);
   static const apkDownloadUrl =
       'https://github.com/FNICKE/Sachin_Dev/releases/download/mobile-latest/app-release.apk';
 }

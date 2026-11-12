@@ -97,7 +97,8 @@ class UpdateService extends ChangeNotifier {
       if (data != null) {
         final info = AppUpdateInfo.fromJson(data);
         _latest = info;
-        _hasUpdate = info.buildNumber > currentBuild;
+        // Local development builds (build 0) never show the update prompt.
+        _hasUpdate = currentBuild > 0 && info.buildNumber > currentBuild;
       }
     } catch (e) {
       _errorMessage = e.toString();

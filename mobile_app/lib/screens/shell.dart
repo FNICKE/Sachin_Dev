@@ -92,7 +92,7 @@ class _ShellState extends State<Shell> with SingleTickerProviderStateMixin {
     (Icons.home_outlined, Icons.home_rounded, 'Home'),
     (Icons.grid_view_outlined, Icons.grid_view_rounded, 'Work'),
     (Icons.person_outline_rounded, Icons.person_rounded, 'About'),
-    (Icons.article_outlined, Icons.article_rounded, 'Journal'),
+    (Icons.article_outlined, Icons.article_rounded, 'Blog'),
     (Icons.chat_bubble_outline_rounded, Icons.chat_bubble_rounded, 'Contact'),
   ];
 

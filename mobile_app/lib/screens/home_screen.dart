@@ -553,7 +553,7 @@ class _Numbers extends StatelessWidget {
   }
 }
 
-/* ── Journal ───────────────────────────────────────────────────────── */
+/* ── Blog ──────────────────────────────────────────────────────────── */
 
 class _LatestPosts extends StatelessWidget {
   const _LatestPosts();
@@ -567,7 +567,7 @@ class _LatestPosts extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SectionLabel('(05) — Journal'),
+          const SectionLabel('(05) — Blog'),
           const SizedBox(height: 12),
           Row(
             crossAxisAlignment: CrossAxisAlignment.end,
