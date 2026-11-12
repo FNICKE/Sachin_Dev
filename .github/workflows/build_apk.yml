@@ -12,6 +12,11 @@ on:
 permissions:
   contents: write
 
+# Run one build at a time so two releases never overwrite each other's files.
+concurrency:
+  group: build-apk
+  cancel-in-progress: false
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -46,12 +51,17 @@ jobs:
         id: meta
         run: |
           VERSION="1.0.${{ github.run_number }}"
+          # Every version gets its own file name, so a phone can never re-install an
+          # older APK by mistake (the download is clearly "sachin-dev-v1.0.N.apk").
+          APK_NAME="sachin-dev-v$VERSION.apk"
           echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "apk_name=$APK_NAME" >> $GITHUB_OUTPUT
+          echo "built_at=$(date -u +'%Y-%m-%d %H:%M UTC')" >> $GITHUB_OUTPUT
           cat <<EOF > mobile_app/version.json
           {
             "version": "$VERSION",
             "build_number": ${{ github.run_number }},
-            "apk_url": "https://github.com/${{ github.repository }}/releases/download/mobile-latest/app-release.apk",
+            "apk_url": "https://github.com/${{ github.repository }}/releases/download/mobile-latest/$APK_NAME",
             "published_at": "$(date -u +'%Y-%m-%dT%H:%M:%SZ')",
             "title": "Sachin Dev v$VERSION"
           }
@@ -78,8 +88,15 @@ jobs:
             mobile_app/build/app/outputs/flutter-apk/app-release.apk
             mobile_app/version.json
 
-      # 8. Publish or update GitHub Release with the latest APK
-      - name: Update GitHub Release with APK & Version Metadata
+      # 8. Publish the APKs FIRST. version.json is uploaded only after this succeeds,
+      #    so installed apps are never told about an update whose APK isn't there yet
+      #    (otherwise a phone could download the previous APK and keep seeing the pop-up).
+      - name: Copy APK to its versioned name
+        run: cp app-release.apk "${{ steps.meta.outputs.apk_name }}"
+        working-directory: mobile_app/build/app/outputs/flutter-apk
+
+      - name: Publish APKs to the GitHub Release
+        id: publish_apk
         uses: softprops/action-gh-release@v2
         if: github.ref == 'refs/heads/main'
         continue-on-error: true
@@ -91,13 +108,38 @@ jobs:
 
             - **Version**: `v${{ steps.meta.outputs.version }}`
             - **Build Number**: `${{ github.run_number }}`
-            - **Built on**: $(date -u +'%Y-%m-%d %H:%M UTC')
+            - **Built on**: ${{ steps.meta.outputs.built_at }}
             - **Commit**: `${{ github.sha }}`
 
             #### 📥 Direct Downloads
-            - [**Download Latest APK (app-release.apk)**](https://github.com/${{ github.repository }}/releases/download/mobile-latest/app-release.apk)
+            - [**Download v${{ steps.meta.outputs.version }} (${{ steps.meta.outputs.apk_name }})**](https://github.com/${{ github.repository }}/releases/download/mobile-latest/${{ steps.meta.outputs.apk_name }})
+            - [Always-latest link (app-release.apk)](https://github.com/${{ github.repository }}/releases/download/mobile-latest/app-release.apk)
             - [View Version Metadata (version.json)](https://github.com/${{ github.repository }}/releases/download/mobile-latest/version.json)
           files: |
+            mobile_app/build/app/outputs/flutter-apk/${{ steps.meta.outputs.apk_name }}
             mobile_app/build/app/outputs/flutter-apk/app-release.apk
-            mobile_app/version.json
           token: ${{ secrets.GITHUB_TOKEN }}
+
+      # 9. Now that the APK is downloadable, tell installed apps about it.
+      - name: Publish version.json (announces the update to installed apps)
+        if: github.ref == 'refs/heads/main' && steps.publish_apk.outcome == 'success'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload mobile-latest mobile_app/version.json --clobber --repo "${{ github.repository }}"
+
+      # 10. Keep the release tidy: remove versioned APKs older than the previous one.
+      - name: Remove old versioned APKs
+        if: github.ref == 'refs/heads/main' && steps.publish_apk.outcome == 'success'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          KEEP_NOW="${{ steps.meta.outputs.apk_name }}"
+          KEEP_PREV="sachin-dev-v1.0.$(( ${{ github.run_number }} - 1 )).apk"
+          gh release view mobile-latest --repo "${{ github.repository }}" --json assets --jq '.assets[].name' \
+            | grep -E '^sachin-dev-v[0-9.]+\.apk$' \
+            | grep -vxF -e "$KEEP_NOW" -e "$KEEP_PREV" \
+            | while read -r old; do
+                echo "Deleting $old"
+                gh release delete-asset mobile-latest "$old" --repo "${{ github.repository }}" -y
+              done

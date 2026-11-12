@@ -105,6 +105,8 @@ class _UpdateDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final p = context.palette;
+    // e.g. "sachin-dev-v1.0.23.apk" — naming the exact file avoids opening an older download.
+    final fileName = Uri.tryParse(latest.apkUrl)?.pathSegments.lastOrNull ?? '';
     return Center(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 22),
@@ -179,9 +181,11 @@ class _UpdateDialog extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        for (final (i, step) in const [
+                        for (final (i, step) in [
                           'Tap "Update now" — the new APK downloads.',
-                          'Open the download and tap Install.',
+                          fileName.endsWith('.apk')
+                              ? 'Open $fileName from your downloads and tap Install.'
+                              : 'Open the download and tap Install.',
                           'Your data stays — it simply replaces this version.',
                         ].indexed)
                           Padding(

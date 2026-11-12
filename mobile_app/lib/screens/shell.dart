@@ -186,7 +186,9 @@ class _ShellState extends State<Shell> with SingleTickerProviderStateMixin {
                               const SizedBox(width: 10),
                               Expanded(
                                 child: Text(
-                                  'Update v${updater.latest?.version ?? ''} available — Tap to install',
+                                  'Update v${updater.latest?.version ?? ''} available'
+                                  '${updater.currentVersion == 'dev' ? '' : ' (you have v${updater.currentVersion})'}'
+                                  ' — Tap to install',
                                   style: AppText.sans(13.5,
                                       color: p.brandInk,
                                       weight: FontWeight.w600),
