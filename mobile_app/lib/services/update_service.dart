@@ -49,21 +49,34 @@ class UpdateService extends ChangeNotifier {
   String get currentVersion => Site.appVersion;
   int get currentBuild => Site.buildNumber;
 
+  DateTime? _lastChecked;
+
+  /// Re-checks if the last check is older than [maxAge] (used when the app comes back to the foreground).
+  Future<void> checkIfStale({Duration maxAge = const Duration(minutes: 10)}) async {
+    final last = _lastChecked;
+    if (_isChecking || (last != null && DateTime.now().difference(last) < maxAge)) return;
+    await checkForUpdate();
+  }
+
   Future<void> checkForUpdate() async {
     _isChecking = true;
     _errorMessage = null;
+    _lastChecked = DateTime.now();
     notifyListeners();
 
     try {
+      // The release's version.json is rewritten by GitHub Actions on every build, so it is
+      // always current. (mobile_app/version.json in the repo is NOT updated by CI — it only
+      // exists so apps built before this fix can still discover new versions.)
+      final cacheBust = DateTime.now().millisecondsSinceEpoch;
       final endpoints = [
-        'https://raw.githubusercontent.com/FNICKE/Sachin_Dev/main/mobile_app/version.json',
-        'https://github.com/FNICKE/Sachin_Dev/releases/download/mobile-latest/version.json',
+        'https://github.com/FNICKE/Sachin_Dev/releases/download/mobile-latest/version.json?t=$cacheBust',
       ];
 
       Map<String, dynamic>? data;
       for (final url in endpoints) {
         try {
-          final res = await http.get(Uri.parse(url)).timeout(const Duration(seconds: 4));
+          final res = await http.get(Uri.parse(url)).timeout(const Duration(seconds: 10));
           if (res.statusCode == 200) {
             data = jsonDecode(res.body) as Map<String, dynamic>;
             break;
@@ -76,7 +89,7 @@ class UpdateService extends ChangeNotifier {
           final res = await http.get(
             Uri.parse('https://api.github.com/repos/FNICKE/Sachin_Dev/releases/tags/mobile-latest'),
             headers: {'Accept': 'application/vnd.github.v3+json'},
-          ).timeout(const Duration(seconds: 4));
+          ).timeout(const Duration(seconds: 10));
           if (res.statusCode == 200) {
             final gh = jsonDecode(res.body) as Map<String, dynamic>;
             final name = gh['name']?.toString() ?? '';
