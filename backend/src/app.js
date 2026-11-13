@@ -37,6 +37,7 @@ const contactRoutes = require('./routes/contactroutes');
 const settingRoutes = require('./routes/settingroutes');
 const mediaRoutes = require('./routes/mediaroutes');
 const chatbotRoutes = require('./routes/chatbotroutes');
+const testimonialRoutes = require('./routes/testimonialroutes');
 const pool = require('./config/database');
 const { serveDbImage } = require('./controllers/mediacontroller');
 
@@ -62,6 +63,7 @@ app.use('/api/contacts', contactRoutes);
 app.use('/api/settings', settingRoutes);
 app.use('/api/media', mediaRoutes);
 app.use('/api/chat', chatbotRoutes);
+app.use('/api/testimonials', testimonialRoutes);
 
 // Health check
 app.get('/', (req, res) => {

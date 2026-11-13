@@ -8,7 +8,13 @@ const pool = mysql.createPool({
   database: process.env.DB_NAME,
   port: process.env.DB_PORT || 3306,
   waitForConnections: true,
-  connectionLimit: 3,
+  // The free Clever Cloud database allows only 5 connections in total — shared by
+  // the live server, a local server and any scripts. So: at most 3 at once, keep
+  // only 1 open while idle, and close the others after a minute.
+  connectionLimit: Number(process.env.DB_CONNECTION_LIMIT) || 3,
+  maxIdle: 1,
+  idleTimeout: 60000,
+  enableKeepAlive: true,
   queueLimit: 0
 });
 

@@ -117,7 +117,8 @@ const compressImage = async (file, folder = '') => {
   }
 
   const isDocument = folder.endsWith('settings');
-  const maxSide = isDocument ? 2400 : 1600;
+  const isAvatar = folder.endsWith('testimonials'); // client photos are shown small
+  const maxSide = isDocument ? 2400 : isAvatar ? 400 : 1600;
   try {
     const buffer = await sharp(file.buffer, { failOn: 'none' })
       .rotate() // respect the phone camera's orientation
@@ -141,16 +142,24 @@ const IMAGE_REFERENCES = [
   ['site_settings', 'setting_value'],
   ['skills', 'icon_url'],
   ['users', 'avatar_url'],
+  ['testimonials', 'avatar_url'],
+  ['testimonials', 'quote'],
 ];
 
 /**
- * Deletes database images that no project, blog, setting or skill uses any more,
- * so replaced and deleted images don't fill the 10 MB database. If any check
- * fails (e.g. a table changed), nothing is deleted.
+ * Deletes database images that no project, blog, setting, skill or testimonial
+ * uses any more, so replaced and deleted images don't fill the 10 MB database.
+ * Only checks tables that exist; if any check fails, nothing is deleted.
  */
 const pruneUnusedImages = async () => {
   await ensureMediaTable();
-  const notUsed = IMAGE_REFERENCES.map(
+  const [existing] = await pool.query(
+    'SELECT table_name AS t, column_name AS c FROM information_schema.columns WHERE table_schema = DATABASE()'
+  );
+  const present = new Set(existing.map((row) => `${row.t}.${row.c}`.toLowerCase()));
+  const references = IMAGE_REFERENCES.filter(([table, column]) => present.has(`${table}.${column}`));
+  if (!references.length) return 0; // can't tell what is used — delete nothing
+  const notUsed = references.map(
     ([table, column]) =>
       `NOT EXISTS (SELECT 1 FROM \`${table}\` r WHERE r.\`${column}\` LIKE CONCAT('%${DB_IMAGE_PREFIX}', media.id, '-%'))`
   ).join(' AND ');
