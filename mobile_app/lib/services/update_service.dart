@@ -47,7 +47,7 @@ class AppUpdateInfo {
 
 /// Where an in-app update is.
 enum UpdatePhase {
-  /// Nothing started yet (or cancelled).
+  /// Nothing started yet (on mobile data the user is asked first).
   idle,
 
   /// The APK is downloading inside the app.
@@ -56,10 +56,13 @@ enum UpdatePhase {
   /// Checking the downloaded file before installing it.
   verifying,
 
+  /// Downloaded and checked; installs when the user taps "Update now" or leaves the app.
+  ready,
+
   /// Android needs "Install unknown apps" allowed for this app first.
   needsPermission,
 
-  /// Android's installer was opened; the user taps Install there.
+  /// Installing: either by itself (Android 12+) or on Android's "Install" screen.
   installing,
 
   /// Something went wrong — see [UpdateService.downloadError].
@@ -67,12 +70,27 @@ enum UpdatePhase {
 }
 
 class UpdateService extends ChangeNotifier {
-  UpdateService({bool autoCheck = true}) {
-    if (autoCheck) {
-      _removeOldDownloads();
-      checkForUpdate();
-    }
+  UpdateService({
+    bool autoCheck = true,
+    http.Client Function()? httpClient,
+    @visibleForTesting int? currentBuildOverride,
+  })  : _newClient = httpClient ?? http.Client.new,
+        _currentBuildOverride = currentBuildOverride {
+    if (autoCheck) _start();
   }
+
+  Future<void> _start() async {
+    if (ApkInstaller.isSupported) {
+      _statusSubscription = ApkInstaller.statuses.listen(handleInstallStatus);
+      // Leftovers first, so this can never delete a download that has just started.
+      await _removeOldDownloads();
+    }
+    await checkForUpdate();
+  }
+
+  final http.Client Function() _newClient;
+  final int? _currentBuildOverride;
+  StreamSubscription<InstallStatus>? _statusSubscription;
 
   bool _isChecking = false;
   bool get isChecking => _isChecking;
@@ -87,7 +105,7 @@ class UpdateService extends ChangeNotifier {
   String? get errorMessage => _errorMessage;
 
   String get currentVersion => Site.appVersion;
-  int get currentBuild => Site.buildNumber;
+  int get currentBuild => _currentBuildOverride ?? Site.buildNumber;
 
   DateTime? _lastChecked;
 
@@ -104,6 +122,7 @@ class UpdateService extends ChangeNotifier {
     _lastChecked = DateTime.now();
     notifyListeners();
 
+    final client = _newClient();
     try {
       // The release's version.json is rewritten by GitHub Actions on every build, so it is
       // always current. (mobile_app/version.json in the repo is NOT updated by CI — it only
@@ -116,7 +135,7 @@ class UpdateService extends ChangeNotifier {
       Map<String, dynamic>? data;
       for (final url in endpoints) {
         try {
-          final res = await http.get(Uri.parse(url)).timeout(const Duration(seconds: 10));
+          final res = await client.get(Uri.parse(url)).timeout(const Duration(seconds: 10));
           if (res.statusCode == 200) {
             data = jsonDecode(res.body) as Map<String, dynamic>;
             break;
@@ -126,7 +145,7 @@ class UpdateService extends ChangeNotifier {
 
       if (data == null) {
         try {
-          final res = await http.get(
+          final res = await client.get(
             Uri.parse('https://api.github.com/repos/FNICKE/Sachin_Dev/releases/tags/mobile-latest'),
             headers: {'Accept': 'application/vnd.github.v3+json'},
           ).timeout(const Duration(seconds: 10));
@@ -156,9 +175,12 @@ class UpdateService extends ChangeNotifier {
     } catch (e) {
       _errorMessage = e.toString();
     } finally {
+      client.close();
       _isChecking = false;
       notifyListeners();
     }
+
+    await _maybeDownloadAutomatically();
   }
 
   // ---------------------------------------------------------------------------
@@ -167,8 +189,7 @@ class UpdateService extends ChangeNotifier {
 
   /// Whether the update can be downloaded and installed inside the app.
   /// When false, the update is opened in the browser instead.
-  bool get canUpdateInApp => ApkInstaller.isSupported && !_inAppUnsupported;
-  bool _inAppUnsupported = false;
+  bool get canUpdateInApp => ApkInstaller.isSupported;
 
   UpdatePhase _phase = UpdatePhase.idle;
   UpdatePhase get phase => _phase;
@@ -186,13 +207,27 @@ class UpdateService extends ChangeNotifier {
   String? _downloadError;
   String? get downloadError => _downloadError;
 
-  /// True while something is happening that the UI should show (download/check/install).
+  /// True while downloading or checking the file.
   bool get isBusy => _phase == UpdatePhase.downloading || _phase == UpdatePhase.verifying;
+
+  /// Whether the download started by itself (Wi-Fi) rather than from a tap.
+  bool get startedAutomatically => _automatic;
+
+  /// Android 12+ with installs allowed: the update installs without Android's screen
+  /// (the app closes for a moment). Known once the update is downloaded.
+  bool get installsSilently => _installsSilently;
+  bool _installsSilently = false;
+
+  /// While installing: Android's "Install" screen is (or was) shown to the user.
+  bool get waitingForConfirmation => _waitingForConfirmation;
+  bool _waitingForConfirmation = false;
 
   String? _apkPath; // downloaded and checked APK, ready for the installer
   int? _apkBuild; // which build that APK is
   http.Client? _client;
   bool _cancelled = false;
+  bool _automatic = false;
+  bool _autoDeclined = false; // the user cancelled — don't start again by itself this session
 
   void _setPhase(UpdatePhase phase, {String? error}) {
     _phase = phase;
@@ -200,25 +235,39 @@ class UpdateService extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Downloads the latest APK inside the app, checks it, and opens Android's
-  /// installer. Safe to call again: resumes at the right step (e.g. opens the
-  /// installer straight away if the APK is already downloaded).
-  Future<void> downloadAndInstall() async {
+  /// Starts the download by itself on Wi-Fi (or always, if Site.autoDownloadOnMobileData).
+  Future<void> _maybeDownloadAutomatically() async {
+    if (!_hasUpdate || !canUpdateInApp || _autoDeclined || _phase != UpdatePhase.idle) return;
+    try {
+      if (!Site.autoDownloadOnMobileData && !await ApkInstaller.isUnmetered()) return;
+    } catch (_) {
+      return;
+    }
+    await downloadAndInstall(automatic: true);
+  }
+
+  /// Downloads the latest APK inside the app and checks it.
+  /// - From a tap ([automatic] false): installs straight away.
+  /// - By itself ([automatic] true): waits in [UpdatePhase.ready] until the user taps
+  ///   "Update now" or leaves the app, so the app never closes while it's being used.
+  /// Safe to call again: continues at the right step.
+  Future<void> downloadAndInstall({bool automatic = false}) async {
     final info = _latest;
     if (info == null || !canUpdateInApp || isBusy) return;
 
     final ready = _apkPath;
     if (ready != null && _apkBuild == info.buildNumber && File(ready).existsSync()) {
-      await _openInstaller();
+      if (!automatic) await installNow();
       return;
     }
 
+    _automatic = automatic;
     _cancelled = false;
     _received = 0;
     _total = info.apkSize;
     _setPhase(UpdatePhase.downloading);
 
-    final client = _client = http.Client();
+    final client = _client = _newClient();
     try {
       final dir = await ApkInstaller.updateDir();
       await _clearFolder(dir);
@@ -238,6 +287,7 @@ class UpdateService extends ChangeNotifier {
       try {
         // A stalled connection (no data for 30s) fails instead of hanging forever.
         await for (final chunk in response.stream.timeout(const Duration(seconds: 30))) {
+          if (_cancelled) break;
           sink.add(chunk);
           _received += chunk.length;
           final now = DateTime.now();
@@ -266,10 +316,15 @@ class UpdateService extends ChangeNotifier {
       await part.rename(apk.path);
       _apkPath = apk.path;
       _apkBuild = info.buildNumber;
+      _installsSilently = await _canInstallSilently();
 
-      await _openInstaller();
+      if (automatic) {
+        _setPhase(UpdatePhase.ready);
+      } else {
+        await installNow();
+      }
     } catch (error) {
-      if (_cancelled) return; // cancel() already reset the state
+      if (_cancelled) return; // cancelDownload() already reset the state
       debugPrint('In-app update failed: $error');
       _setPhase(
         UpdatePhase.failed,
@@ -285,14 +340,19 @@ class UpdateService extends ChangeNotifier {
     }
   }
 
-  /// Stops a download in progress.
+  /// Stops a download in progress (and doesn't restart it by itself this session).
   void cancelDownload() {
     if (_phase != UpdatePhase.downloading) return;
     _cancelled = true;
+    _autoDeclined = true;
     _client?.close();
     _received = 0;
     _setPhase(UpdatePhase.idle);
   }
+
+  /// Installs the downloaded update now. On Android 12+ the app closes for a
+  /// moment and updates itself; otherwise Android's "Install" screen opens.
+  Future<void> installNow() => _install(background: false);
 
   /// Opens the system screen to allow installs from this app.
   Future<void> openInstallPermission() async {
@@ -301,38 +361,83 @@ class UpdateService extends ChangeNotifier {
     } catch (_) {}
   }
 
-  /// Called when the app comes back to the foreground: continues the install
-  /// once the user has allowed it in Settings.
+  /// The app came back to the foreground: continue once installs are allowed.
   Future<void> onAppResumed() async {
     if (_phase == UpdatePhase.needsPermission && await ApkInstaller.canInstall()) {
-      await _openInstaller();
+      await installNow();
     }
   }
 
-  Future<void> _openInstaller() async {
+  /// The user left the app: a downloaded update installs quietly now (Android 12+),
+  /// like the Play Store does — the next time the app opens, it's the new version.
+  Future<void> onAppPaused() async {
+    if (_phase != UpdatePhase.ready) return;
+    if (await _canInstallSilently()) await _install(background: true);
+  }
+
+  Future<bool> _canInstallSilently() async {
+    try {
+      return await ApkInstaller.canInstallSilently();
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<void> _install({required bool background}) async {
     final path = _apkPath;
-    if (path == null) return;
+    // While a silent install runs, don't start another; Android's own screen may be reopened.
+    if (path == null || (_phase == UpdatePhase.installing && !_waitingForConfirmation)) return;
     try {
       if (!await ApkInstaller.canInstall()) {
-        _setPhase(UpdatePhase.needsPermission);
+        if (!background) _setPhase(UpdatePhase.needsPermission);
         return;
       }
-      await ApkInstaller.install(path);
-      // Android's installer is now on screen. If it's dismissed, "Install" opens it again.
+      _installsSilently = await _canInstallSilently();
+      _waitingForConfirmation = false;
       _setPhase(UpdatePhase.installing);
-    } on PlatformException catch (e) {
-      if (e.code == 'UNSUPPORTED') {
-        _inAppUnsupported = true; // Android 6 or older: use the browser instead
-        _setPhase(UpdatePhase.idle);
-      } else {
-        _setPhase(UpdatePhase.failed, error: 'Android could not open the installer. Please try again.');
+      final how = await ApkInstaller.install(path, background: background);
+      if (how == 'viewer') {
+        _waitingForConfirmation = true;
+        notifyListeners();
       }
+    } on PlatformException catch (e) {
+      debugPrint('Install failed: ${e.message}');
+      if (background) {
+        _setPhase(UpdatePhase.ready); // try again from the pop-up
+      } else {
+        _setPhase(UpdatePhase.failed, error: 'Android could not install the update. Please try again.');
+      }
+    }
+  }
+
+  /// Handles PackageInstaller's result for the install started by [_install].
+  @visibleForTesting
+  void handleInstallStatus(InstallStatus status) {
+    switch (status.code) {
+      case ApkInstaller.statusPendingUserAction:
+        // Android shows its "Install" screen (older Android, or it decided to ask).
+        _waitingForConfirmation = true;
+        _setPhase(UpdatePhase.installing);
+      case ApkInstaller.statusSuccess:
+        // The app is replaced and closes by itself; nothing to do.
+        break;
+      case ApkInstaller.statusAborted:
+        // The user cancelled Android's screen — keep the download for later.
+        _setPhase(UpdatePhase.ready);
+      default:
+        debugPrint('Install status ${status.code}: ${status.message}');
+        _setPhase(UpdatePhase.failed, error: switch (status.code) {
+          ApkInstaller.statusStorage => 'Not enough free space on the phone to install the update.',
+          ApkInstaller.statusConflict || ApkInstaller.statusInvalid || ApkInstaller.statusIncompatible =>
+            "Android couldn't install this update over the app on your phone. Try \"Use browser\".",
+          ApkInstaller.statusBlocked => 'Android blocked the install. Check "Install unknown apps" for this app.',
+          _ => "Android couldn't install the update. Please try again.",
+        });
     }
   }
 
   /// Deletes update APKs left over from earlier downloads (after updating, they're useless).
   Future<void> _removeOldDownloads() async {
-    if (!ApkInstaller.isSupported) return;
     try {
       await _clearFolder(await ApkInstaller.updateDir());
     } catch (_) {}
@@ -348,9 +453,20 @@ class UpdateService extends ChangeNotifier {
     }
   }
 
+  bool _disposed = false;
+
+  // A download or check that is still finishing must not touch a disposed service.
+  @override
+  void notifyListeners() {
+    if (!_disposed) super.notifyListeners();
+  }
+
   @override
   void dispose() {
+    _disposed = true;
+    _cancelled = true;
     _client?.close();
+    _statusSubscription?.cancel();
     super.dispose();
   }
 }

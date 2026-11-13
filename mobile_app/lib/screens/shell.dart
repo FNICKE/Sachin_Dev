@@ -158,7 +158,9 @@ class _ShellState extends State<Shell> with SingleTickerProviderStateMixin {
                   final message = switch (updater.phase) {
                     UpdatePhase.downloading => 'Downloading update v$version…$percent',
                     UpdatePhase.verifying => 'Checking the update…',
+                    UpdatePhase.ready => 'Update v$version is ready — tap to update now',
                     UpdatePhase.needsPermission => 'Allow installs to finish updating — tap here',
+                    UpdatePhase.installing when !updater.waitingForConfirmation => 'Installing update v$version…',
                     UpdatePhase.installing => 'Update v$version downloaded — tap to install',
                     UpdatePhase.failed => 'Update paused — tap to try again',
                     UpdatePhase.idle => 'Update v$version available'

@@ -31,6 +31,10 @@ class Site {
   // so every build knows its real version. Local `flutter run` builds report build 0.
   static const appVersion = String.fromEnvironment('APP_VERSION', defaultValue: 'dev');
   static const buildNumber = int.fromEnvironment('APP_BUILD', defaultValue: 0);
+
+  /// New versions download by themselves on Wi-Fi. On mobile data the update
+  /// pop-up asks first (an update is ~22 MB). Set to true to always download.
+  static const autoDownloadOnMobileData = false;
   static const apkDownloadUrl =
       'https://github.com/FNICKE/Sachin_Dev/releases/download/mobile-latest/app-release.apk';
 }

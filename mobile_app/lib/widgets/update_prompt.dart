@@ -8,16 +8,19 @@ import '../services/update_service.dart';
 import '../theme/app_theme.dart';
 import 'ui.dart';
 
-/// Shows a pop-up when a newer version of the app is published on GitHub, and
-/// downloads + installs it inside the app (Android) when the user taps
-/// "Download & install".
+/// Shows a pop-up when a newer version of the app is published on GitHub and
+/// updates the app from inside it (Android):
 ///
-/// - Checks when the app starts (UpdateService) and again whenever the app
-///   comes back to the foreground (at most every 10 minutes).
-/// - Pops up once per new version per app session; "Later" hides it (the small
-///   banner at the top stays as a reminder and reopens it).
-/// - The download keeps going if the pop-up is hidden; it reappears by itself
-///   if it needs the user (permission or an error).
+/// - Checks when the app starts and whenever it comes back to the foreground
+///   (at most every 10 minutes).
+/// - On Wi-Fi the new version downloads by itself; on mobile data the pop-up
+///   asks first.
+/// - Once downloaded: "Update now" installs it (Android 12+ without Android's
+///   screen — the app closes for a moment), or it installs by itself when the
+///   user leaves the app.
+/// - Pops up once per new version; "Later" hides it (the banner at the top stays
+///   and reopens it). It comes back by itself when the update is ready or needs
+///   the user (permission or an error).
 class UpdatePrompt extends StatefulWidget {
   const UpdatePrompt({super.key, required this.child});
   final Widget child;
@@ -59,6 +62,8 @@ class _UpdatePromptState extends State<UpdatePrompt> with WidgetsBindingObserver
     if (state == AppLifecycleState.resumed) {
       _updater?.onAppResumed(); // continue the install after "Allow from this source"
       _updater?.checkIfStale();
+    } else if (state == AppLifecycleState.paused) {
+      _updater?.onAppPaused(); // a downloaded update installs while the app isn't in use
     }
   }
 
@@ -74,11 +79,13 @@ class _UpdatePromptState extends State<UpdatePrompt> with WidgetsBindingObserver
     final latest = updater?.latest;
     if (updater == null || !updater.hasUpdate || latest == null) return;
 
-    // The user needs to act (permission / error) — bring the pop-up back if it was hidden.
+    // The update is ready, or the user needs to act (permission / error) — bring
+    // the pop-up back if it was hidden.
     final phase = updater.phase;
     if (phase != _lastPhase) {
       _lastPhase = phase;
-      if (!_showing && (phase == UpdatePhase.needsPermission || phase == UpdatePhase.failed)) {
+      if (!_showing &&
+          (phase == UpdatePhase.ready || phase == UpdatePhase.needsPermission || phase == UpdatePhase.failed)) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted) _show();
         });
@@ -144,10 +151,13 @@ class UpdateDialog extends StatelessWidget {
 
     void start() => updater.canUpdateInApp ? updater.downloadAndInstall() : openInBrowser();
 
+    final silentInstall = phase == UpdatePhase.installing && !updater.waitingForConfirmation;
     final (IconData icon, String title, String accent) = switch (phase) {
       UpdatePhase.downloading => (Icons.downloading_rounded, 'Downloading ', 'update'),
       UpdatePhase.verifying => (Icons.verified_rounded, 'Checking ', 'download'),
+      UpdatePhase.ready => (Icons.rocket_launch_rounded, 'Update ', 'ready'),
       UpdatePhase.needsPermission => (Icons.shield_outlined, 'One-time ', 'permission'),
+      UpdatePhase.installing when silentInstall => (Icons.install_mobile_rounded, 'Installing ', 'update'),
       UpdatePhase.installing => (Icons.install_mobile_rounded, 'Ready to ', 'install'),
       UpdatePhase.failed => (Icons.error_outline_rounded, 'Update ', 'paused'),
       UpdatePhase.idle => (Icons.system_update_rounded, 'New update ', 'available'),
@@ -161,7 +171,16 @@ class UpdateDialog extends StatelessWidget {
               ? '${_mb(updater.receivedBytes)} of ${_mb(updater.totalBytes)} MB'
               : '${_mb(updater.receivedBytes)} MB',
           right: updater.progress == null ? '' : '${(updater.progress! * 100).floor()}%',
-          note: "Keep using the app — Android's installer opens by itself when the download finishes.",
+          note: updater.startedAutomatically
+              ? 'Version ${latest.version} is downloading by itself — keep using the app.'
+              : 'Keep using the app — the update installs as soon as the download finishes.',
+        ),
+      UpdatePhase.ready => _Message(
+          key: const ValueKey('ready'),
+          text: updater.installsSilently
+              ? 'Version ${latest.version} is downloaded. Tap "Update now" — the app closes for a moment '
+                  'and updates itself. Or carry on: it updates when you leave the app.'
+              : 'Version ${latest.version} is downloaded. Tap "Update now", then Install on the Android screen.',
         ),
       UpdatePhase.verifying => const _Progress(
           key: ValueKey('verifying'),
@@ -174,6 +193,13 @@ class UpdateDialog extends StatelessWidget {
           key: ValueKey('permission'),
           text: 'Android asks for this once. On the next screen, turn on '
               '"Allow from this source", then come back — the install continues by itself.',
+        ),
+      UpdatePhase.installing when silentInstall => _Progress(
+          key: const ValueKey('installing-silent'),
+          value: null,
+          left: 'Installing version ${latest.version}…',
+          right: '',
+          note: 'The app closes for a moment and updates itself — open it again in a few seconds. Your data stays.',
         ),
       UpdatePhase.installing => _Message(
           key: const ValueKey('installing'),
@@ -200,8 +226,10 @@ class UpdateDialog extends StatelessWidget {
           Icons.download_rounded
         ),
       UpdatePhase.failed => ('Try again', start, Icons.refresh_rounded),
+      UpdatePhase.ready => ('Update now', updater.installNow, Icons.system_update_rounded),
       UpdatePhase.needsPermission => ('Open settings', updater.openInstallPermission, Icons.settings_rounded),
-      UpdatePhase.installing => ('Install', updater.downloadAndInstall, Icons.install_mobile_rounded),
+      UpdatePhase.installing when silentInstall => (null, null, null),
+      UpdatePhase.installing => ('Install', updater.installNow, Icons.install_mobile_rounded),
       UpdatePhase.downloading || UpdatePhase.verifying => (null, null, null),
     };
 
@@ -290,7 +318,10 @@ class UpdateDialog extends StatelessWidget {
                           }),
                         if (phase == UpdatePhase.failed && updater.canUpdateInApp)
                           _TextAction('USE BROWSER', onTap: openInBrowser),
-                        _TextAction(updater.isBusy ? 'HIDE' : 'LATER', onTap: close),
+                        _TextAction(
+                          updater.isBusy || phase == UpdatePhase.installing ? 'HIDE' : 'LATER',
+                          onTap: close,
+                        ),
                       ],
                     ),
                   ],
@@ -328,7 +359,7 @@ class _Steps extends StatelessWidget {
     final steps = inApp
         ? const [
             'Tap "Download & install" — it downloads right here in the app.',
-            'Android asks you to confirm — tap Install.',
+            'It installs by itself (older Android asks you to tap Install).',
             'Your data stays — it simply replaces this version.',
           ]
         : const [

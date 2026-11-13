@@ -9,10 +9,18 @@ import 'package:mobile_app/widgets/update_prompt.dart';
 
 /// An UpdateService frozen in one phase, without network or Android calls.
 class _FakeUpdates extends UpdateService {
-  _FakeUpdates(this._phase, {this.inApp = true}) : super(autoCheck: false);
+  _FakeUpdates(this._phase, {this.inApp = true, this.confirm = false}) : super(autoCheck: false);
 
   final UpdatePhase _phase;
   final bool inApp;
+  final bool confirm;
+
+  @override
+  bool get waitingForConfirmation => confirm;
+  @override
+  bool get installsSilently => !confirm;
+  @override
+  bool get startedAutomatically => true;
 
   @override
   UpdatePhase get phase => _phase;
@@ -69,8 +77,9 @@ void main() {
     UpdatePhase.idle: ('available', 'Download & install'),
     UpdatePhase.downloading: ('update', 'CANCEL'),
     UpdatePhase.verifying: ('download', 'HIDE'),
+    UpdatePhase.ready: ('ready', 'Update now'),
     UpdatePhase.needsPermission: ('permission', 'Open settings'),
-    UpdatePhase.installing: ('install', 'Install'),
+    UpdatePhase.installing: ('Installing', 'HIDE'), // Android 12+: installs by itself
     UpdatePhase.failed: ('paused', 'Try again'),
   };
 
@@ -84,6 +93,12 @@ void main() {
       });
     }
   }
+
+  testWidgets('older Android: installing asks to tap Install', (tester) async {
+    await _pumpDialog(tester, _FakeUpdates(UpdatePhase.installing, confirm: true), Palette.light, Brightness.light);
+    expect(tester.takeException(), isNull);
+    expect(find.text('Install'), findsOneWidget);
+  });
 
   testWidgets('download shows megabytes and percent', (tester) async {
     await _pumpDialog(tester, _FakeUpdates(UpdatePhase.downloading), Palette.light, Brightness.light);
