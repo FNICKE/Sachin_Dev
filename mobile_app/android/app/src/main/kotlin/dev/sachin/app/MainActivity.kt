@@ -1,13 +1,17 @@
 package dev.sachin.app
 
+import android.Manifest
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageInstaller
+import android.content.pm.PackageManager
 import android.net.ConnectivityManager
 import android.net.Uri
 import android.os.Build
 import android.provider.Settings
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
@@ -33,6 +37,19 @@ class MainActivity : FlutterActivity() {
         channel = updater
         updater.setMethodCallHandler { call, result ->
             when (call.method) {
+                // Update alerts: schedule the background check and ask (once) to notify.
+                "startUpdateAlerts" -> {
+                    UpdateCheckWorker.schedule(this)
+                    askNotificationPermissionOnce()
+                    result.success(true)
+                }
+
+                // Remove the "Update available" notification.
+                "clearUpdateAlert" -> {
+                    UpdateCheckWorker.clearNotification(this)
+                    result.success(true)
+                }
+
                 // Folder the APK is downloaded to.
                 "updateDir" -> result.success(updateDir().absolutePath)
 
@@ -118,6 +135,8 @@ class MainActivity : FlutterActivity() {
     override fun onResume() {
         super.onResume()
         current = WeakReference(this)
+        // The app is open, so its update pop-up takes over from the notification.
+        UpdateCheckWorker.clearNotification(this)
         // Android asked to confirm an install while the app was in the background: show it now.
         pendingConfirmation?.let {
             pendingConfirmation = null
@@ -133,6 +152,20 @@ class MainActivity : FlutterActivity() {
     override fun cleanUpFlutterEngine(flutterEngine: FlutterEngine) {
         channel = null
         super.cleanUpFlutterEngine(flutterEngine)
+    }
+
+    /** Android 13+: ask once, a moment after the app opens, for permission to show update alerts. */
+    private fun askNotificationPermissionOnce() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) ==
+            PackageManager.PERMISSION_GRANTED
+        ) return
+        if (!UpdateCheckWorker.firstPermissionAsk(this)) return
+        window.decorView.postDelayed({
+            if (!isFinishing) {
+                ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.POST_NOTIFICATIONS), 7001)
+            }
+        }, 2500)
     }
 
     private fun updateDir(): File = File(cacheDir, "updates").apply { mkdirs() }

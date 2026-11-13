@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
+import 'data/site.dart';
 import 'providers/portfolio_provider.dart';
 import 'screens/shell.dart';
 import 'services/notification_service.dart';
@@ -16,9 +17,10 @@ import 'theme/theme_controller.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Set up the Android notification channel and (on Android 13+) ask for permission.
-  // Does nothing on other platforms.
-  unawaited(NotificationService.instance.init());
+  // Update alerts: start the background update checks (Android) and, on Android 13+,
+  // ask once for permission to notify. Skipped in the Google Play build, where Play
+  // updates the app. Does nothing on other platforms.
+  if (Site.selfUpdates) unawaited(NotificationService.instance.init());
 
   // Load the bundled fonts before the first frame so text never flashes in a fallback font.
   AppText.preload();

@@ -165,6 +165,19 @@ void main() {
     updates.dispose();
   });
 
+  test('Google Play build: never contacts GitHub and never installs by itself', () async {
+    final phone = _Phone();
+    final updates = UpdateService(httpClient: phone.server, currentBuildOverride: 24, selfUpdates: false);
+    await Future<void>.delayed(const Duration(milliseconds: 100));
+    await updates.checkForUpdate();
+    await updates.downloadAndInstall();
+    expect(phone.requests, isEmpty);
+    expect(updates.hasUpdate, isFalse);
+    expect(updates.canUpdateInApp, isFalse);
+    expect(phone.installs, isEmpty);
+    updates.dispose();
+  });
+
   test('already up to date: nothing is downloaded', () async {
     final phone = _Phone();
     final updates = UpdateService(httpClient: () => phone.server(latestBuild: 24), currentBuildOverride: 24);

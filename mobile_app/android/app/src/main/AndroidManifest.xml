@@ -45,6 +45,11 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/update_paths" />
         </provider>
+        <!-- This (GitHub) build updates itself; the Google Play build sets it to false
+             (src/play/AndroidManifest.xml) — Play updates the app there. -->
+        <meta-data
+            android:name="dev.sachin.app.SELF_UPDATE"
+            android:value="true" />
         <!-- Gets the result of an in-app update install. -->
         <receiver
             android:name=".InstallStatusReceiver"

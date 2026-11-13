@@ -75,10 +75,16 @@ class UpdateService extends ChangeNotifier {
     bool autoCheck = true,
     http.Client Function()? httpClient,
     @visibleForTesting int? currentBuildOverride,
+    @visibleForTesting bool? selfUpdates,
   })  : _newClient = httpClient ?? http.Client.new,
-        _currentBuildOverride = currentBuildOverride {
-    if (autoCheck) _start();
+        _currentBuildOverride = currentBuildOverride,
+        _selfUpdates = selfUpdates ?? Site.selfUpdates {
+    if (autoCheck && _selfUpdates) _start();
   }
+
+  /// False in the Google Play build: Play installs updates itself, and Play's
+  /// rules don't allow an app to update itself — so no GitHub checks, no pop-up.
+  final bool _selfUpdates;
 
   Future<void> _start() async {
     if (ApkInstaller.isSupported) {
@@ -110,10 +116,6 @@ class UpdateService extends ChangeNotifier {
 
   DateTime? _lastChecked;
 
-  /// Build number we've already shown an "update available" notification for.
-  /// Stops the notification from firing again on every re-check in the same session.
-  int? _notifiedBuild;
-
   /// Re-checks if the last check is older than [maxAge] (used when the app comes back to the foreground).
   Future<void> checkIfStale({Duration maxAge = const Duration(minutes: 10)}) async {
     final last = _lastChecked;
@@ -122,6 +124,7 @@ class UpdateService extends ChangeNotifier {
   }
 
   Future<void> checkForUpdate() async {
+    if (!_selfUpdates) return; // Google Play build: Play handles updates
     _isChecking = true;
     _errorMessage = null;
     _lastChecked = DateTime.now();
@@ -176,13 +179,8 @@ class UpdateService extends ChangeNotifier {
         _latest = info;
         // Local development builds (build 0) never show the update prompt.
         _hasUpdate = currentBuild > 0 && info.buildNumber > currentBuild;
-        if (_hasUpdate && _notifiedBuild != info.buildNumber) {
-          _notifiedBuild = info.buildNumber;
-          unawaited(NotificationService.instance.showUpdateAvailable(
-            version: info.version,
-            releaseNotes: info.releaseNotes,
-          ));
-        }
+        // (The "Update available" notification comes from the native background check,
+        // which also runs while the app is closed — see UpdateCheckWorker.kt.)
       }
     } catch (e) {
       _errorMessage = e.toString();
@@ -201,7 +199,7 @@ class UpdateService extends ChangeNotifier {
 
   /// Whether the update can be downloaded and installed inside the app.
   /// When false, the update is opened in the browser instead.
-  bool get canUpdateInApp => ApkInstaller.isSupported;
+  bool get canUpdateInApp => _selfUpdates && ApkInstaller.isSupported;
 
   UpdatePhase _phase = UpdatePhase.idle;
   UpdatePhase get phase => _phase;

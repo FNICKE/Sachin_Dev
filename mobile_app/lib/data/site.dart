@@ -32,6 +32,12 @@ class Site {
   static const appVersion = String.fromEnvironment('APP_VERSION', defaultValue: 'dev');
   static const buildNumber = int.fromEnvironment('APP_BUILD', defaultValue: 0);
 
+  /// Where this build is distributed: "github" (the APK from GitHub Releases, which
+  /// updates itself) or "play" (Google Play, which updates the app — set by the
+  /// Play build with --dart-define=DISTRIBUTION=play).
+  static const distribution = String.fromEnvironment('DISTRIBUTION', defaultValue: 'github');
+  static const selfUpdates = distribution != 'play';
+
   /// New versions download by themselves on Wi-Fi. On mobile data the update
   /// pop-up asks first (an update is ~22 MB). Set to true to always download.
   static const autoDownloadOnMobileData = false;
