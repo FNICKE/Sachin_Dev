@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -6,12 +8,17 @@ import 'package:provider/provider.dart';
 
 import 'providers/portfolio_provider.dart';
 import 'screens/shell.dart';
+import 'services/notification_service.dart';
 import 'services/update_service.dart';
 import 'theme/app_theme.dart';
 import 'theme/theme_controller.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Set up the Android notification channel and (on Android 13+) ask for permission.
+  // Does nothing on other platforms.
+  unawaited(NotificationService.instance.init());
 
   // Load the bundled fonts before the first frame so text never flashes in a fallback font.
   AppText.preload();

@@ -20,6 +20,7 @@ dependencies:
   animations: ^2.0.11
   shimmer: ^3.0.0
   flex_color_scheme: ^8.0.0
+  flutter_local_notifications: ^17.2.3
 
 dev_dependencies:
   flutter_test:

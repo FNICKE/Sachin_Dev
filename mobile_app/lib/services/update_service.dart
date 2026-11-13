@@ -8,6 +8,7 @@ import 'package:http/http.dart' as http;
 
 import '../data/site.dart';
 import 'apk_installer.dart';
+import 'notification_service.dart';
 
 class AppUpdateInfo {
   final String version;
@@ -109,6 +110,10 @@ class UpdateService extends ChangeNotifier {
 
   DateTime? _lastChecked;
 
+  /// Build number we've already shown an "update available" notification for.
+  /// Stops the notification from firing again on every re-check in the same session.
+  int? _notifiedBuild;
+
   /// Re-checks if the last check is older than [maxAge] (used when the app comes back to the foreground).
   Future<void> checkIfStale({Duration maxAge = const Duration(minutes: 10)}) async {
     final last = _lastChecked;
@@ -171,6 +176,13 @@ class UpdateService extends ChangeNotifier {
         _latest = info;
         // Local development builds (build 0) never show the update prompt.
         _hasUpdate = currentBuild > 0 && info.buildNumber > currentBuild;
+        if (_hasUpdate && _notifiedBuild != info.buildNumber) {
+          _notifiedBuild = info.buildNumber;
+          unawaited(NotificationService.instance.showUpdateAvailable(
+            version: info.version,
+            releaseNotes: info.releaseNotes,
+          ));
+        }
       }
     } catch (e) {
       _errorMessage = e.toString();
@@ -395,6 +407,7 @@ class UpdateService extends ChangeNotifier {
       _installsSilently = await _canInstallSilently();
       _waitingForConfirmation = false;
       _setPhase(UpdatePhase.installing);
+      unawaited(NotificationService.instance.cancelUpdateAvailable());
       final how = await ApkInstaller.install(path, background: background);
       if (how == 'viewer') {
         _waitingForConfirmation = true;
