@@ -57,25 +57,36 @@ jobs:
         run: flutter pub get
         working-directory: mobile_app
 
-      # 4b. Signing key from GitHub Secrets (it is no longer stored in the repository).
+      # 4b. Signing key: from GitHub Secrets if they are set, otherwise the key in the
+      #     repository (mobile_app/android/key.properties + app/upload-keystore.jks).
+      #     Either way it must be the key that signed the installed apps.
       - name: Set up signing key
         env:
           KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
-          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          SECRET_STORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          SECRET_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
         run: |
-          if [ -z "$KEYSTORE_BASE64" ] || [ -z "$KEYSTORE_PASSWORD" ] || [ -z "$KEY_ALIAS" ]; then
-            echo "::error title=Signing key missing::Add the GitHub secrets ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS and ANDROID_KEY_PASSWORD (repo Settings > Secrets and variables > Actions), then re-run this workflow."
+          PROPS=mobile_app/android/key.properties
+          if [ -n "$KEYSTORE_BASE64" ] && [ -n "$SECRET_STORE_PASSWORD" ] && [ -n "$SECRET_KEY_ALIAS" ]; then
+            printf '%s' "$KEYSTORE_BASE64" | tr -d '\r\n ' | base64 --decode > "$RUNNER_TEMP/upload-keystore.jks"
+            STORE="$RUNNER_TEMP/upload-keystore.jks"; STORE_PASS="$SECRET_STORE_PASSWORD"; ALIAS="$SECRET_KEY_ALIAS"
+            echo "KEYSTORE_PATH=$STORE" >> "$GITHUB_ENV"
+            SOURCE="GitHub Secrets"
+          elif [ -f "$PROPS" ]; then
+            prop() { grep -E "^$1=" "$PROPS" | head -1 | cut -d= -f2- | tr -d '\r'; }
+            STORE="mobile_app/android/app/$(prop storeFile)"; STORE_PASS="$(prop storePassword)"; ALIAS="$(prop keyAlias)"
+            echo "::add-mask::$STORE_PASS"
+            SOURCE="the repository (key.properties)"
+          else
+            echo "::error title=Signing key missing::No signing key: add mobile_app/android/key.properties + app/upload-keystore.jks, or the ANDROID_KEYSTORE_* secrets."
             exit 1
           fi
-          printf '%s' "$KEYSTORE_BASE64" | tr -d '\r\n ' | base64 --decode > "$RUNNER_TEMP/upload-keystore.jks"
-          ACTUAL=$(keytool -list -v -keystore "$RUNNER_TEMP/upload-keystore.jks" -storepass "$KEYSTORE_PASSWORD" -alias "$KEY_ALIAS" | grep -m1 'SHA256:' | sed 's/.*SHA256: *//')
+          ACTUAL=$(keytool -list -v -keystore "$STORE" -storepass "$STORE_PASS" -alias "$ALIAS" | grep -m1 'SHA256:' | sed 's/.*SHA256: *//')
           if [ "$ACTUAL" != "$EXPECTED_SIGNING_SHA256" ]; then
             echo "::error title=Wrong signing key::This key ($ACTUAL) is not the one that signed the installed apps ($EXPECTED_SIGNING_SHA256). Apps signed with it could not update. Use the original upload-keystore.jks."
             exit 1
           fi
-          echo "KEYSTORE_PATH=$RUNNER_TEMP/upload-keystore.jks" >> "$GITHUB_ENV"
-          echo "Signing key OK ($ACTUAL)"
+          echo "Signing key OK from $SOURCE ($ACTUAL)"
 
       # 5. Generate Version & Build Metadata
       - name: Generate Version Metadata
