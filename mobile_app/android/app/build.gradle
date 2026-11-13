@@ -33,11 +33,21 @@ def resolveKeystoreProp = { String propKey, String envKey ->
     keystoreProperties[propKey] ?: System.getenv(envKey)
 }
 
+// Release signing: key.properties (local) or env vars (CI).
+//   Local: mobile_app/android/key.properties with storeFile/storePassword/keyAlias/keyPassword.
+//   CI:    KEYSTORE_PATH, KEYSTORE_PASSWORD, KEY_ALIAS, KEY_PASSWORD.
+def releaseStoreFile = resolveKeystoreProp("storeFile", "KEYSTORE_PATH")
+def releaseStorePassword = resolveKeystoreProp("storePassword", "KEYSTORE_PASSWORD")
+def releaseKeyAlias = resolveKeystoreProp("keyAlias", "KEY_ALIAS")
+def releaseKeyPassword = resolveKeystoreProp("keyPassword", "KEY_PASSWORD")
+def hasReleaseSigning = releaseStoreFile && releaseStorePassword && releaseKeyAlias && releaseKeyPassword
+
 android {
     namespace = "dev.sachin.app"
     // Pinned to meet Google Play's targetSdk requirement (35+ as of 2025).
     compileSdk = 35
-    ndkVersion = flutter.ndkVersion
+    // Pinned: some plugins require this NDK; Flutter's default is older.
+    ndkVersion = "26.1.10909125"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
@@ -58,24 +68,23 @@ android {
     }
 
     signingConfigs {
-        release {
-            def storeFilePath = resolveKeystoreProp("storeFile", "KEYSTORE_PATH")
-            def storePasswordValue = resolveKeystoreProp("storePassword", "KEYSTORE_PASSWORD")
-            def keyAliasValue = resolveKeystoreProp("keyAlias", "KEY_ALIAS")
-            def keyPasswordValue = resolveKeystoreProp("keyPassword", "KEY_PASSWORD")
-
-            if (storeFilePath && storePasswordValue && keyAliasValue && keyPasswordValue) {
-                storeFile file(storeFilePath)
-                storePassword storePasswordValue
-                keyAlias keyAliasValue
-                keyPassword keyPasswordValue
+        if (hasReleaseSigning) {
+            release {
+                storeFile file(releaseStoreFile)
+                storePassword releaseStorePassword
+                keyAlias releaseKeyAlias
+                keyPassword releaseKeyPassword
             }
         }
     }
 
     buildTypes {
         release {
-            signingConfig signingConfigs.release
+            if (hasReleaseSigning) {
+                signingConfig signingConfigs.release
+            }
+            // Otherwise the release build is unsigned and ':app:validateSigningRelease'
+            // fails with a clear message — see below.
         }
     }
 
@@ -84,6 +93,23 @@ android {
     // GitHub self-update parts. Without DISTRIBUTION=play you get the GitHub APK.
     if (System.getenv("DISTRIBUTION") == "play") {
         sourceSets.release.manifest.srcFile "src/play/AndroidManifest.xml"
+    }
+}
+
+// Fail the release build with a clear message when the signing config is missing.
+// Beats the opaque "SigningConfig release is missing required property storeFile".
+if (!hasReleaseSigning) {
+    tasks.matching { it.name.toLowerCase().contains("release") && !it.name.toLowerCase().contains("debug") }.configureEach {
+        doFirst {
+            if (gradle.startParameter.taskNames.any { it.toLowerCase().contains("release") || it.toLowerCase().contains("bundle") }) {
+                throw new GradleException(
+                    "\n\nRelease signing is not configured.\n" +
+                    "Local builds: create mobile_app/android/key.properties with storeFile, storePassword, keyAlias, keyPassword.\n" +
+                    "CI builds:    set env vars KEYSTORE_PATH, KEYSTORE_PASSWORD, KEY_ALIAS, KEY_PASSWORD.\n" +
+                    "Saw: storeFile=${releaseStoreFile != null}, storePassword=${releaseStorePassword != null}, keyAlias=${releaseKeyAlias != null}, keyPassword=${releaseKeyPassword != null}.\n"
+                )
+            }
+        }
     }
 }
 
