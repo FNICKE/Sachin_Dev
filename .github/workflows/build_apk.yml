@@ -8,6 +8,11 @@ on:
       - 'mobile_app/**'
       - '.github/workflows/build_apk.yml'
   workflow_dispatch: # Allows manual trigger from GitHub Actions tab
+    inputs:
+      play_bundle:
+        description: 'Also build the Google Play bundle (.aab)'
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -20,6 +25,12 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+
+    env:
+      # Fingerprint of the key that signed every APK people have installed. A different
+      # key would stop them from updating, so the build refuses to use one.
+      EXPECTED_SIGNING_SHA256: 'E7:3D:1A:49:34:8F:3D:CA:62:27:C0:49:FF:49:5E:63:4C:C3:00:79:29:D6:96:24:DE:FA:40:23:24:33:22:C2'
+      HAS_PLAY_ACCOUNT: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON != '' }}
 
     steps:
       # 1. Checkout repository code
@@ -46,6 +57,26 @@ jobs:
         run: flutter pub get
         working-directory: mobile_app
 
+      # 4b. Signing key from GitHub Secrets (it is no longer stored in the repository).
+      - name: Set up signing key
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+        run: |
+          if [ -z "$KEYSTORE_BASE64" ] || [ -z "$KEYSTORE_PASSWORD" ] || [ -z "$KEY_ALIAS" ]; then
+            echo "::error title=Signing key missing::Add the GitHub secrets ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS and ANDROID_KEY_PASSWORD (repo Settings > Secrets and variables > Actions), then re-run this workflow."
+            exit 1
+          fi
+          printf '%s' "$KEYSTORE_BASE64" | tr -d '\r\n ' | base64 --decode > "$RUNNER_TEMP/upload-keystore.jks"
+          ACTUAL=$(keytool -list -v -keystore "$RUNNER_TEMP/upload-keystore.jks" -storepass "$KEYSTORE_PASSWORD" -alias "$KEY_ALIAS" | grep -m1 'SHA256:' | sed 's/.*SHA256: *//')
+          if [ "$ACTUAL" != "$EXPECTED_SIGNING_SHA256" ]; then
+            echo "::error title=Wrong signing key::This key ($ACTUAL) is not the one that signed the installed apps ($EXPECTED_SIGNING_SHA256). Apps signed with it could not update. Use the original upload-keystore.jks."
+            exit 1
+          fi
+          echo "KEYSTORE_PATH=$RUNNER_TEMP/upload-keystore.jks" >> "$GITHUB_ENV"
+          echo "Signing key OK ($ACTUAL)"
+
       # 5. Generate Version & Build Metadata
       - name: Generate Version Metadata
         id: meta
@@ -71,6 +102,10 @@ jobs:
 
       # 6. Build the Android APK with automated version & build number
       - name: Build Release APK
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
           flutter build apk --release \
             --build-name=${{ steps.meta.outputs.version }} \
@@ -155,3 +190,44 @@ jobs:
                 echo "Deleting $old"
                 gh release delete-asset mobile-latest "$old" --repo "${{ github.repository }}" -y
               done
+
+      # 11. Google Play bundle — only when started from the Actions tab with
+      #     "Also build the Google Play bundle" ticked. Same version number as the APK.
+      #     DISTRIBUTION=play removes the self-update parts (Play doesn't allow them).
+      - name: Build Google Play bundle (.aab)
+        if: github.event_name == 'workflow_dispatch' && inputs.play_bundle
+        env:
+          DISTRIBUTION: play
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          flutter build appbundle --release \
+            --build-name=${{ steps.meta.outputs.version }} \
+            --build-number=${{ github.run_number }} \
+            --dart-define=APP_VERSION=${{ steps.meta.outputs.version }} \
+            --dart-define=APP_BUILD=${{ github.run_number }} \
+            --dart-define=DISTRIBUTION=play
+          cp build/app/outputs/bundle/release/app-release.aab "build/app/outputs/bundle/release/sachin-dev-v${{ steps.meta.outputs.version }}.aab"
+        working-directory: mobile_app
+
+      # Download it from this run's page (Artifacts) and upload it in Play Console.
+      - name: Save the Google Play bundle
+        if: github.event_name == 'workflow_dispatch' && inputs.play_bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: google-play-bundle-v${{ steps.meta.outputs.version }}
+          path: mobile_app/build/app/outputs/bundle/release/sachin-dev-v${{ steps.meta.outputs.version }}.aab
+
+      # Optional: send it straight to Play's internal testing track. Needs the secret
+      # PLAY_SERVICE_ACCOUNT_JSON, and the app must already exist in Play Console
+      # (the very first bundle is always uploaded by hand).
+      - name: Send the bundle to Google Play (internal testing)
+        if: github.event_name == 'workflow_dispatch' && inputs.play_bundle && env.HAS_PLAY_ACCOUNT == 'true'
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: dev.sachin.app
+          releaseFiles: mobile_app/build/app/outputs/bundle/release/app-release.aab
+          track: internal
+          status: draft
