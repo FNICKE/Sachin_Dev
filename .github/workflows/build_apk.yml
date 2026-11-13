@@ -79,6 +79,18 @@ jobs:
             --dart-define=APP_BUILD=${{ github.run_number }}
         working-directory: mobile_app
 
+      # 6b. Add the APK's checksum and size to version.json — the app checks the
+      #     downloaded file against them before installing it.
+      - name: Add checksum to version.json
+        run: |
+          APK=build/app/outputs/flutter-apk/app-release.apk
+          SHA=$(sha256sum "$APK" | cut -d' ' -f1)
+          SIZE=$(stat -c%s "$APK")
+          jq --arg sha "$SHA" --argjson size "$SIZE" '. + {sha256: $sha, apk_size: $size}' version.json > version.tmp
+          mv version.tmp version.json
+          cat version.json
+        working-directory: mobile_app
+
       # 7. Upload the compiled APK and version metadata as artifacts
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4

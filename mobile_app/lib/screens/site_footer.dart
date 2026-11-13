@@ -7,6 +7,7 @@ import '../services/update_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/reveal.dart';
 import '../widgets/ui.dart';
+import '../widgets/update_prompt.dart';
 import 'shell.dart';
 
 /// "Got an idea? Let's build it." call to action + footer, shown at the end of each tab.
@@ -93,7 +94,7 @@ class SiteFooter extends StatelessWidget {
               return GestureDetector(
                 onTap: () {
                   if (hasUpdate) {
-                    openLink(context, latest?.apkUrl ?? Site.apkDownloadUrl);
+                    UpdatePrompt.open(context);
                   } else {
                     updater.checkForUpdate();
                     ScaffoldMessenger.of(context)

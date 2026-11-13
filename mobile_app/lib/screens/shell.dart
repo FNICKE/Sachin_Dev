@@ -4,8 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
-import '../data/site.dart';
-import '../services/links.dart';
 import '../services/update_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/contact_sheet.dart';
@@ -155,6 +153,18 @@ class _ShellState extends State<Shell> with SingleTickerProviderStateMixin {
                 builder: (context, updater, _) {
                   if (!updater.hasUpdate) return const SizedBox.shrink();
                   final topInset = MediaQuery.of(context).padding.top;
+                  final version = updater.latest?.version ?? '';
+                  final percent = updater.progress == null ? '' : ' ${(updater.progress! * 100).floor()}%';
+                  final message = switch (updater.phase) {
+                    UpdatePhase.downloading => 'Downloading update v$version…$percent',
+                    UpdatePhase.verifying => 'Checking the update…',
+                    UpdatePhase.needsPermission => 'Allow installs to finish updating — tap here',
+                    UpdatePhase.installing => 'Update v$version downloaded — tap to install',
+                    UpdatePhase.failed => 'Update paused — tap to try again',
+                    UpdatePhase.idle => 'Update v$version available'
+                        '${updater.currentVersion == 'dev' ? '' : ' (you have v${updater.currentVersion})'}'
+                        ' — tap to update',
+                  };
                   return Positioned(
                     top: topInset + 8,
                     left: 16,
@@ -163,11 +173,9 @@ class _ShellState extends State<Shell> with SingleTickerProviderStateMixin {
                       color: Colors.transparent,
                       child: InkWell(
                         borderRadius: BorderRadius.circular(16),
-                        onTap: () => openLink(context,
-                            updater.latest?.apkUrl ?? Site.apkDownloadUrl),
+                        onTap: () => UpdatePrompt.open(context),
                         child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 14, vertical: 10),
+                          clipBehavior: Clip.antiAlias,
                           decoration: BoxDecoration(
                             color: p.brand,
                             borderRadius: BorderRadius.circular(16),
@@ -179,23 +187,41 @@ class _ShellState extends State<Shell> with SingleTickerProviderStateMixin {
                               ),
                             ],
                           ),
-                          child: Row(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(Icons.system_update_rounded,
-                                  color: p.brandInk, size: 20),
-                              const SizedBox(width: 10),
-                              Expanded(
-                                child: Text(
-                                  'Update v${updater.latest?.version ?? ''} available'
-                                  '${updater.currentVersion == 'dev' ? '' : ' (you have v${updater.currentVersion})'}'
-                                  ' — Tap to install',
-                                  style: AppText.sans(13.5,
-                                      color: p.brandInk,
-                                      weight: FontWeight.w600),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                        updater.isBusy
+                                            ? Icons.downloading_rounded
+                                            : Icons.system_update_rounded,
+                                        color: p.brandInk,
+                                        size: 20),
+                                    const SizedBox(width: 10),
+                                    Expanded(
+                                      child: Text(
+                                        message,
+                                        style: AppText.sans(13.5,
+                                            color: p.brandInk,
+                                            weight: FontWeight.w600),
+                                      ),
+                                    ),
+                                    Icon(Icons.arrow_forward_rounded,
+                                        color: p.brandInk, size: 18),
+                                  ],
                                 ),
                               ),
-                              Icon(Icons.arrow_forward_rounded,
-                                  color: p.brandInk, size: 18),
+                              // Thin progress line along the bottom while downloading.
+                              if (updater.isBusy)
+                                LinearProgressIndicator(
+                                  value: updater.phase == UpdatePhase.downloading ? updater.progress : null,
+                                  minHeight: 3,
+                                  color: p.brandInk,
+                                  backgroundColor: p.brandInk.withOpacity(0.2),
+                                ),
                             ],
                           ),
                         ),
